@@ -1,12 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import { getUsers, getTransactions, type Profile, type Transaction } from '../lib/mockData';
 import { Users, LogOut, Search, Wallet } from 'lucide-react';
 import { UserManagement } from './UserManagement';
-import type { Database } from '../lib/database.types';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Transaction = Database['public']['Tables']['transactions']['Row'];
 
 export function AdminDashboard() {
   const { profile, signOut } = useAuth();
@@ -27,24 +23,17 @@ export function AdminDashboard() {
 
   const fetchUsers = async () => {
     try {
-      const { data: usersData, error: usersError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'user')
-        .order('created_at', { ascending: false });
+      const allUsers = getUsers();
+      const usersData = allUsers.filter((u) => u.role === 'user');
+      // Sort by created_at descending
+      const sorted = [...usersData].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setUsers(sorted);
 
-      if (usersError) throw usersError;
-
-      setUsers(usersData || []);
-
-      const { data: transactionsData, error: transactionsError } = await supabase
-        .from('transactions')
-        .select('user_id, amount');
-
-      if (transactionsError) throw transactionsError;
-
+      const transactionsData = getTransactions();
       const balances: Record<string, number> = {};
-      (transactionsData as Transaction[]).forEach((txn) => {
+      transactionsData.forEach((txn) => {
         balances[txn.user_id] = (balances[txn.user_id] || 0) + Number(txn.amount);
       });
 

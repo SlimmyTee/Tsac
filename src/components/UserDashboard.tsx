@@ -1,19 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
-import { CreditCard, Wallet, LogOut, Search } from 'lucide-react';
-import type { Database } from '../lib/database.types';
-
-type Transaction = Database['public']['Tables']['transactions']['Row'];
+import { getTransactions, type Transaction } from '../lib/mockData';
+import { UserLayout } from './UserLayout';
+import { Bell, ArrowDown, ArrowUp, MoreHorizontal, AlertCircle } from 'lucide-react';
 
 export function UserDashboard() {
-  const { profile, signOut } = useAuth();
+  const { profile } = useAuth();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [filteredTransactions, setFilteredTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState(0);
+  const [refundableBalance, setRefundableBalance] = useState(0);
+  const [pendingCharge, setPendingCharge] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<string>('all');
 
   useEffect(() => {
     if (profile?.id) {
@@ -21,24 +18,16 @@ export function UserDashboard() {
     }
   }, [profile?.id]);
 
-  useEffect(() => {
-    filterTransactions();
-  }, [searchTerm, typeFilter, transactions]);
-
   const fetchTransactions = async () => {
     if (!profile?.id) return;
 
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', profile.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setTransactions(data || []);
-      calculateBalance(data || []);
+      const data = getTransactions(profile.id);
+      const sorted = [...data].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setTransactions(sorted);
+      calculateBalances(sorted);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -46,194 +35,184 @@ export function UserDashboard() {
     }
   };
 
-  const calculateBalance = (txns: Transaction[]) => {
+  const calculateBalances = (txns: Transaction[]) => {
     const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
-  };
-
-  const filterTransactions = () => {
-    let filtered = transactions;
-
-    if (searchTerm) {
-      filtered = filtered.filter((txn) =>
-        txn.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (typeFilter !== 'all') {
-      filtered = filtered.filter((txn) => txn.type === typeFilter);
-    }
-
-    setFilteredTransactions(filtered);
-  };
-
-  const formatCardNumber = (cardNumber: string | null) => {
-    if (!cardNumber) return '•••• •••• •••• ••••';
-    return cardNumber.replace(/(\d{4})(?=\d)/g, '$1 ');
+    
+    // Calculate refundable balance (positive amounts)
+    const refundable = txns
+      .filter(t => Number(t.amount) > 0)
+      .reduce((sum, txn) => sum + Number(txn.amount), 0);
+    setRefundableBalance(refundable);
+    
+    // Calculate pending charges (negative amounts that are pending)
+    const pending = txns
+      .filter(t => Number(t.amount) < 0 && t.type === 'debit')
+      .reduce((sum, txn) => sum + Math.abs(Number(txn.amount)), 0);
+    setPendingCharge(pending);
   };
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  const formatCardNumber = (cardNumber: string | null) => {
+    if (!cardNumber) return '5296 8857 8444 5778';
+    return cardNumber.replace(/(\d{4})(?=\d)/g, '$1 ');
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
-      </div>
+      <UserLayout currentPage="home">
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        </div>
+      </UserLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Wallet className="w-6 h-6 text-slate-900" />
-              <h1 className="text-xl font-bold text-slate-900">Wallet</h1>
+    <UserLayout currentPage="home">
+      <div className="space-y-6">
+        {/* Top Cards Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Escrow Balance Card */}
+          <div className="lg:col-span-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Escrow Balance</h3>
+              <div className="flex items-center space-x-2 bg-yellow-400/20 px-3 py-1 rounded-full">
+                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                <span className="text-sm font-medium">Pending</span>
+              </div>
             </div>
-            <button
-              onClick={signOut}
-              className="flex items-center space-x-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out</span>
+            <div className="mb-6">
+              <p className="text-5xl font-bold mb-2">{formatCurrency(balance)}</p>
+            </div>
+            <div className="pt-4 border-t border-white/20">
+              <p className="text-sm text-white/80 mb-1">TCC Number</p>
+              <p className="text-xl font-mono tracking-wider">{formatCardNumber(profile?.card_number || null)}</p>
+            </div>
+          </div>
+
+          {/* Balances Card */}
+          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+            <h3 className="text-xl font-semibold text-white mb-4">Balances</h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Refundable Balance</p>
+                <p className="text-2xl font-bold text-green-400">+{formatCurrency(refundableBalance)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-400 mb-1">Pending Charge</p>
+                <p className="text-2xl font-bold text-white">{formatCurrency(pendingCharge)}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
+          <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <button className="bg-orange-500/20 hover:bg-orange-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
+              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
+                <Bell className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white font-medium text-sm">Notification</span>
+            </button>
+            <button className="bg-red-500/20 hover:bg-red-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
+              <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
+                <ArrowDown className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white font-medium text-sm">Pay</span>
+            </button>
+            <button className="bg-green-500/20 hover:bg-green-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
+              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                <ArrowUp className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white font-medium text-sm">Withdrawal</span>
+            </button>
+            <button className="bg-purple-500/20 hover:bg-purple-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
+              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
+                <MoreHorizontal className="w-6 h-6 text-white" />
+              </div>
+              <span className="text-white font-medium text-sm">More</span>
             </button>
           </div>
         </div>
-      </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-1">Welcome, {profile?.full_name}</h2>
-          <p className="text-slate-600">{profile?.email}</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-700 rounded-2xl p-6 text-white shadow-lg">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <p className="text-slate-300 text-sm mb-1">Total Balance</p>
-                <p className="text-4xl font-bold">{formatCurrency(balance)}</p>
-              </div>
-              <Wallet className="w-8 h-8 text-slate-300" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-slate-400 text-xs">CARD NUMBER</p>
-              <p className="text-xl tracking-wider font-mono">{formatCardNumber(profile?.card_number || null)}</p>
-            </div>
+        {/* Transactions Table */}
+        <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-gray-700">
+            <h3 className="text-xl font-semibold text-white">Transactions</h3>
           </div>
-
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Quick Stats</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Total Transactions</span>
-                <span className="font-semibold text-slate-900">{transactions.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Credits</span>
-                <span className="font-semibold text-green-600">
-                  {formatCurrency(
-                    transactions
-                      .filter((t) => Number(t.amount) > 0)
-                      .reduce((sum, t) => sum + Number(t.amount), 0)
-                  )}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Debits</span>
-                <span className="font-semibold text-red-600">
-                  {formatCurrency(
-                    Math.abs(
-                      transactions
-                        .filter((t) => Number(t.amount) < 0)
-                        .reduce((sum, t) => sum + Number(t.amount), 0)
-                    )
-                  )}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <h3 className="text-xl font-semibold text-slate-900 mb-4">Transactions</h3>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="text"
-                  placeholder="Search transactions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                />
-              </div>
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value)}
-                className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-              >
-                <option value="all">All Types</option>
-                <option value="credit">Credits</option>
-                <option value="debit">Debits</option>
-                <option value="adjustment">Adjustments</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="divide-y divide-slate-200">
-            {filteredTransactions.length === 0 ? (
-              <div className="p-8 text-center">
-                <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600">No transactions found</p>
-              </div>
-            ) : (
-              filteredTransactions.map((transaction) => (
-                <div key={transaction.id} className="p-6 hover:bg-slate-50 transition">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900 mb-1">{transaction.description}</p>
-                      <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <span>{formatDate(transaction.created_at)}</span>
-                        <span className="px-2 py-0.5 bg-slate-100 rounded text-xs font-medium capitalize">
-                          {transaction.type}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right ml-4">
-                      <p
-                        className={`text-lg font-semibold ${
-                          Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {Number(transaction.amount) >= 0 ? '+' : ''}
-                        {formatCurrency(Number(transaction.amount))}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="bg-gradient-to-r from-pink-500 to-purple-500">
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">TRANSACTION</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">TOTAL FEE COST (NON REFUNDABLE)</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">REFUNDABLE FEE</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">STATUS</th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-800">
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
+                      <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                      <p>No transactions found</p>
+                    </td>
+                  </tr>
+                ) : (
+                  <>
+                    {transactions.map((transaction) => (
+                      <tr key={transaction.id} className="border-b border-gray-700 hover:bg-gray-750 transition">
+                        <td className="px-6 py-4 text-white">{transaction.description}</td>
+                        <td className="px-6 py-4 text-white">
+                          {Number(transaction.amount) < 0 ? formatCurrency(Math.abs(Number(transaction.amount))) : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-green-400">
+                          {Number(transaction.amount) > 0 ? formatCurrency(Number(transaction.amount)) : '-'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-3 py-1 bg-yellow-400/20 text-yellow-400 rounded-full text-xs font-medium">
+                            Pending
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                    {/* Total Row */}
+                    <tr className="bg-gradient-to-r from-pink-500 to-purple-500">
+                      <td className="px-6 py-4 text-white font-semibold">Total</td>
+                      <td className="px-6 py-4 text-white font-semibold">
+                        {formatCurrency(
+                          transactions
+                            .filter(t => Number(t.amount) < 0)
+                            .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
+                        )}
+                      </td>
+                      <td className="px-6 py-4 text-white font-semibold">
+                        {formatCurrency(
+                          transactions
+                            .filter(t => Number(t.amount) > 0)
+                            .reduce((sum, t) => sum + Number(t.amount), 0)
+                        )}
+                      </td>
+                      <td className="px-6 py-4"></td>
+                    </tr>
+                  </>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
-    </div>
+    </UserLayout>
   );
 }

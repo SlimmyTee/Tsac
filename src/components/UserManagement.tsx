@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
+import {
+  getTransactions,
+  addTransaction,
+  updateTransaction,
+  deleteTransaction,
+  type Profile,
+  type Transaction,
+} from '../lib/mockData';
 import { ArrowLeft, Plus, Edit2, Trash2, CreditCard, Wallet } from 'lucide-react';
-import type { Database } from '../lib/database.types';
-
-type Profile = Database['public']['Tables']['profiles']['Row'];
-type Transaction = Database['public']['Tables']['transactions']['Row'];
 
 interface UserManagementProps {
   user: Profile;
@@ -32,16 +35,13 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
 
   const fetchTransactions = async () => {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setTransactions(data || []);
-      calculateBalance(data || []);
+      const data = getTransactions(user.id);
+      // Sort by created_at descending
+      const sorted = [...data].sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+      setTransactions(sorted);
+      calculateBalance(sorted);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -61,15 +61,14 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
       const amount = Number(formData.amount);
       const adjustedAmount = formData.type === 'debit' ? -Math.abs(amount) : Math.abs(amount);
 
-      const { error } = await supabase.from('transactions').insert({
+      addTransaction({
         user_id: user.id,
         amount: adjustedAmount,
         type: formData.type,
         description: formData.description,
         admin_id: adminProfile?.id || null,
+        metadata: {},
       });
-
-      if (error) throw error;
 
       setShowAddModal(false);
       setFormData({ amount: '', type: 'credit', description: '' });
@@ -87,16 +86,11 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
       const amount = Number(formData.amount);
       const adjustedAmount = formData.type === 'debit' ? -Math.abs(amount) : Math.abs(amount);
 
-      const { error } = await supabase
-        .from('transactions')
-        .update({
-          amount: adjustedAmount,
-          type: formData.type,
-          description: formData.description,
-        })
-        .eq('id', selectedTransaction.id);
-
-      if (error) throw error;
+      updateTransaction(selectedTransaction.id, {
+        amount: adjustedAmount,
+        type: formData.type,
+        description: formData.description,
+      });
 
       setShowEditModal(false);
       setSelectedTransaction(null);
@@ -111,10 +105,7 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
     if (!confirm('Are you sure you want to delete this transaction?')) return;
 
     try {
-      const { error } = await supabase.from('transactions').delete().eq('id', transactionId);
-
-      if (error) throw error;
-
+      deleteTransaction(transactionId);
       fetchTransactions();
     } catch (error) {
       console.error('Error deleting transaction:', error);
