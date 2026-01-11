@@ -1,31 +1,16 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
-import {
-  getTransactions,
-  addTransaction,
-  updateTransaction,
-  deleteTransaction,
-  type Profile,
-  type Transaction,
-} from '../lib/mockData';
-import { ArrowLeft, Plus, Edit2, Trash2, CreditCard, Wallet } from 'lucide-react';
+import { fetchUserTransactions, createAdminTransaction } from '../lib/db';
+import { Transaction } from '../types';
+import { ArrowLeft, Plus, CreditCard, Wallet, Calendar } from 'lucide-react';
 
-interface UserManagementProps {
-  user: Profile;
-  onBack: () => void;
-}
-
-export function UserManagement({ user, onBack }: UserManagementProps) {
-  const { profile: adminProfile } = useAuth();
+export function UserManagement({ user, onBack }: any) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [balance, setBalance] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
   const [formData, setFormData] = useState({
     amount: '',
-    type: 'credit' as 'credit' | 'debit' | 'adjustment',
+    type: 'credit' as 'credit' | 'debit',
     description: '',
   });
 
@@ -35,13 +20,9 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
 
   const fetchTransactions = async () => {
     try {
-      const data = getTransactions(user.id);
-      // Sort by created_at descending
-      const sorted = [...data].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setTransactions(sorted);
-      calculateBalance(sorted);
+      const data = await fetchUserTransactions(user.id);
+      setTransactions(data);
+      calculateBalance(data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -59,67 +40,20 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
 
     try {
       const amount = Number(formData.amount);
-      const adjustedAmount = formData.type === 'debit' ? -Math.abs(amount) : Math.abs(amount);
-
-      addTransaction({
-        user_id: user.id,
-        amount: adjustedAmount,
-        type: formData.type,
-        description: formData.description,
-        admin_id: adminProfile?.id || null,
-        metadata: {},
-      });
+      await createAdminTransaction(
+        user.id,
+        amount,
+        formData.type,
+        formData.description || 'Manual Adjustment'
+      );
 
       setShowAddModal(false);
       setFormData({ amount: '', type: 'credit', description: '' });
       fetchTransactions();
     } catch (error) {
       console.error('Error adding transaction:', error);
+      alert('Error creating transaction');
     }
-  };
-
-  const handleUpdateTransaction = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedTransaction) return;
-
-    try {
-      const amount = Number(formData.amount);
-      const adjustedAmount = formData.type === 'debit' ? -Math.abs(amount) : Math.abs(amount);
-
-      updateTransaction(selectedTransaction.id, {
-        amount: adjustedAmount,
-        type: formData.type,
-        description: formData.description,
-      });
-
-      setShowEditModal(false);
-      setSelectedTransaction(null);
-      setFormData({ amount: '', type: 'credit', description: '' });
-      fetchTransactions();
-    } catch (error) {
-      console.error('Error updating transaction:', error);
-    }
-  };
-
-  const handleDeleteTransaction = async (transactionId: string) => {
-    if (!confirm('Are you sure you want to delete this transaction?')) return;
-
-    try {
-      deleteTransaction(transactionId);
-      fetchTransactions();
-    } catch (error) {
-      console.error('Error deleting transaction:', error);
-    }
-  };
-
-  const openEditModal = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
-    setFormData({
-      amount: Math.abs(Number(transaction.amount)).toString(),
-      type: transaction.type,
-      description: transaction.description,
-    });
-    setShowEditModal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -146,59 +80,63 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900"></div>
+      <div className="min-h-screen bg-[#f0f4f1] flex items-center justify-center">
+        <div className="w-16 h-16 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-16">
-            <button
-              onClick={onBack}
-              className="flex items-center space-x-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Back to Users</span>
-            </button>
-          </div>
-        </div>
-      </nav>
+    <div className="min-h-screen bg-[#f0f4f1] relative font-sans p-6 md:p-10">
+      {/* Background Patterns */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-emerald-100/40 rounded-full blur-3xl opacity-50 -mr-20 -mt-20"></div>
+        <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-teal-100/40 rounded-full blur-3xl opacity-50 -ml-20 -mb-20"></div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-1">{user.full_name}</h2>
-          <p className="text-slate-600">{user.email}</p>
-        </div>
+      <div className="max-w-7xl mx-auto relative z-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <button
+          onClick={onBack}
+          className="flex items-center space-x-2 text-slate-500 hover:text-emerald-700 transition mb-6 group"
+        >
+          <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="font-medium">Back to User List</span>
+        </button>
 
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div className="bg-gradient-to-br from-slate-900 to-slate-700 rounded-2xl p-6 text-white shadow-lg">
-            <div className="flex justify-between items-start mb-8">
-              <div>
-                <p className="text-slate-300 text-sm mb-1">Current Balance</p>
-                <p className="text-4xl font-bold">{formatCurrency(balance)}</p>
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <div className="md:col-span-2">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-8 rounded-3xl shadow-sm h-full flex flex-col justify-between">
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h1 className="text-3xl font-bold text-slate-800">{user.full_name}</h1>
+                  <p className="text-slate-500 text-lg">{user.email}</p>
+                </div>
+                <div className="px-3 py-1 bg-slate-200 rounded-full text-xs font-bold text-slate-600 uppercase tracking-wider">
+                  User Profile
+                </div>
               </div>
-              <Wallet className="w-8 h-8 text-slate-300" />
-            </div>
-            <div className="space-y-2">
-              <p className="text-slate-400 text-xs">CARD NUMBER</p>
-              <p className="text-xl tracking-wider font-mono">{formatCardNumber(user.card_number)}</p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <p className="text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-1">Current Balance</p>
+                  <p className="text-3xl font-bold text-emerald-700">{formatCurrency(balance)}</p>
+                </div>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">TCC Card Number</p>
+                  <p className="text-xl font-mono text-slate-700 tracking-tight">{formatCardNumber(user.card_number)}</p>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200">
-            <h3 className="text-lg font-semibold text-slate-900 mb-4">Transaction Summary</h3>
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Total Transactions</span>
-                <span className="font-semibold text-slate-900">{transactions.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Total Credits</span>
-                <span className="font-semibold text-green-600">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-white shadow-xl flex flex-col justify-center">
+            <h3 className="text-lg font-medium text-slate-300 mb-6 flex items-center gap-2">
+              <Wallet className="w-5 h-5" /> Summary
+            </h3>
+            <div className="space-y-6">
+              <div className="flex justify-between items-center border-b border-white/10 pb-4">
+                <span className="text-slate-400">Total Credits</span>
+                <span className="text-emerald-400 font-bold text-xl">
                   {formatCurrency(
                     transactions
                       .filter((t) => Number(t.amount) > 0)
@@ -206,15 +144,13 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
                   )}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-600">Total Debits</span>
-                <span className="font-semibold text-red-600">
+              <div className="flex justify-between items-center pb-2">
+                <span className="text-slate-400">Total Debits</span>
+                <span className="text-rose-400 font-bold text-xl">
                   {formatCurrency(
-                    Math.abs(
-                      transactions
-                        .filter((t) => Number(t.amount) < 0)
-                        .reduce((sum, t) => sum + Number(t.amount), 0)
-                    )
+                    Math.abs(transactions
+                      .filter((t) => Number(t.amount) < 0)
+                      .reduce((sum, t) => sum + Number(t.amount), 0))
                   )}
                 </span>
               </div>
@@ -222,141 +158,144 @@ export function UserManagement({ user, onBack }: UserManagementProps) {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200">
-          <div className="p-6 border-b border-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-semibold text-slate-900">Transaction History</h3>
-              <button
-                onClick={() => setShowAddModal(true)}
-                className="flex items-center space-x-2 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Add Transaction</span>
-              </button>
-            </div>
+        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-sm overflow-hidden">
+          <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-xl font-bold text-slate-800">Transaction History</h3>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-500/20"
+            >
+              <Plus className="w-4 h-4" />
+              <span className="font-semibold text-sm">Add Transaction</span>
+            </button>
           </div>
 
-          <div className="divide-y divide-slate-200">
+          <div className="divide-y divide-slate-100">
             {transactions.length === 0 ? (
-              <div className="p-8 text-center">
-                <CreditCard className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                <p className="text-slate-600">No transactions yet</p>
+              <div className="p-16 text-center">
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-8 h-8 text-slate-400" />
+                </div>
+                <h4 className="text-lg font-medium text-slate-800">No transactions recorded</h4>
+                <p className="text-slate-500">This user has no history yet.</p>
               </div>
             ) : (
-              transactions.map((transaction) => (
-                <div key={transaction.id} className="p-6 hover:bg-slate-50 transition">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <p className="font-medium text-slate-900 mb-1">{transaction.description}</p>
-                      <div className="flex items-center gap-3 text-sm text-slate-600">
-                        <span>{formatDate(transaction.created_at)}</span>
-                        <span className="px-2 py-0.5 bg-slate-100 rounded text-xs font-medium capitalize">
-                          {transaction.type}
-                        </span>
+              transactions.map((transaction) => {
+                const isCredit = Number(transaction.amount) >= 0;
+                return (
+                  <div key={transaction.id} className="p-6 hover:bg-white/80 transition flex items-center justify-between group">
+                    <div className="flex items-start gap-4">
+                      <div className={`p-3 rounded-xl ${isCredit ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                        {isCredit ? <Plus className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-slate-800 mb-0.5">{transaction.description}</p>
+                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
+                          <Calendar className="w-3 h-3" />
+                          {formatDate(transaction.created_at)}
+                          <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[10px] ${isCredit ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                            {transaction.type}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-4">
-                      <p
-                        className={`text-lg font-semibold ${
-                          Number(transaction.amount) >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {Number(transaction.amount) >= 0 ? '+' : ''}
-                        {formatCurrency(Number(transaction.amount))}
+
+                    <div className="text-right">
+                      <p className={`text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
                       </p>
-                      <div className="flex space-x-2">
-                        <button
-                          onClick={() => openEditModal(transaction)}
-                          className="p-2 text-slate-600 hover:text-slate-900 transition"
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteTransaction(transaction.id)}
-                          className="p-2 text-red-600 hover:text-red-700 transition"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
+                        {transaction.status}
+                      </p>
                     </div>
                   </div>
-                </div>
-              ))
+                )
+              })
             )}
           </div>
         </div>
+
       </div>
 
-      {(showAddModal || showEditModal) && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-semibold text-slate-900 mb-4">
-              {showAddModal ? 'Add Transaction' : 'Edit Transaction'}
+      {(showAddModal) && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-3xl max-w-md w-full p-8 shadow-2xl relative overflow-hidden animate-in zoom-in-95 duration-200">
+            <h3 className="text-2xl font-bold text-slate-800 mb-6">
+              Details Adjustment
             </h3>
-            <form onSubmit={showAddModal ? handleAddTransaction : handleUpdateTransaction}>
+            <form onSubmit={handleAddTransaction} className="space-y-5">
+
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Type</label>
-                  <select
-                    value={formData.type}
-                    onChange={(e) =>
-                      setFormData({ ...formData, type: e.target.value as 'credit' | 'debit' | 'adjustment' })
-                    }
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                    required
-                  >
-                    <option value="credit">Credit</option>
-                    <option value="debit">Debit</option>
-                    <option value="adjustment">Adjustment</option>
-                  </select>
+                <div className="grid grid-cols-2 gap-4">
+                  <label className={`cursor-pointer border rounded-xl p-4 text-center transition-all ${formData.type === 'credit' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 ring-1 ring-emerald-500' : 'bg-white border-slate-200 text-slate-600 hover:border-emerald-200'}`}>
+                    <input
+                      type="radio"
+                      name="type"
+                      value="credit"
+                      checked={formData.type === 'credit'}
+                      onChange={() => setFormData({ ...formData, type: 'credit' })}
+                      className="hidden"
+                    />
+                    <span className="font-bold block">Credit (+)</span>
+                  </label>
+                  <label className={`cursor-pointer border rounded-xl p-4 text-center transition-all ${formData.type === 'debit' ? 'bg-rose-50 border-rose-200 text-rose-700 ring-1 ring-rose-500' : 'bg-white border-slate-200 text-slate-600 hover:border-rose-200'}`}>
+                    <input
+                      type="radio"
+                      name="type"
+                      value="debit"
+                      checked={formData.type === 'debit'}
+                      onChange={() => setFormData({ ...formData, type: 'debit' })}
+                      className="hidden"
+                    />
+                    <span className="font-bold block">Debit (-)</span>
+                  </label>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Amount</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
-                    placeholder="0.00"
-                    required
-                  />
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Amount</label>
+                  <div className="relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                    <input
+                      type="number"
+                      step="0.01"
+                      value={formData.amount}
+                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                      className="w-full pl-8 pr-4 py-3 border border-slate-200 rounded-xl text-lg font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
+                      placeholder="0.00"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Description</label>
+                  <label className="block text-sm font-bold text-slate-700 mb-2">Description</label>
                   <textarea
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent"
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition resize-none"
                     rows={3}
-                    placeholder="Enter description..."
+                    placeholder="Reason for adjustment..."
                     required
                   />
                 </div>
               </div>
 
-              <div className="flex space-x-3 mt-6">
+              <div className="flex space-x-3 mt-8 pt-2">
                 <button
                   type="button"
                   onClick={() => {
                     setShowAddModal(false);
-                    setShowEditModal(false);
-                    setSelectedTransaction(null);
                     setFormData({ amount: '', type: 'credit', description: '' });
                   }}
-                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                  className="flex-1 px-4 py-3.5 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition"
+                  className="flex-1 px-4 py-3.5 bg-slate-900 text-white font-semibold rounded-xl hover:bg-emerald-600 transition shadow-lg"
                 >
-                  {showAddModal ? 'Add' : 'Update'}
+                  Confirm
                 </button>
               </div>
             </form>

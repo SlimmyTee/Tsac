@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { getTransactions, type Transaction } from '../lib/mockData';
+import { fetchUserTransactions, createRequest } from '../lib/db';
+import { Transaction } from '../types';
 import { UserLayout } from './UserLayout';
-import { Bell, ArrowDown, ArrowUp, MoreHorizontal, AlertCircle } from 'lucide-react';
+import { Bell, ArrowDown, ArrowUp, MoreHorizontal, AlertCircle, Wallet, TrendingUp, TrendingDown, Clock } from 'lucide-react';
+import { RequestModal } from './RequestModal';
 
 export function UserDashboard() {
   const { profile } = useAuth();
@@ -11,6 +13,10 @@ export function UserDashboard() {
   const [refundableBalance, setRefundableBalance] = useState(0);
   const [pendingCharge, setPendingCharge] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // Modal State
+  const [showPayModal, setShowPayModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   useEffect(() => {
     if (profile?.id) {
@@ -22,12 +28,9 @@ export function UserDashboard() {
     if (!profile?.id) return;
 
     try {
-      const data = getTransactions(profile.id);
-      const sorted = [...data].sort((a, b) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-      setTransactions(sorted);
-      calculateBalances(sorted);
+      const data = await fetchUserTransactions(profile.id);
+      setTransactions(data); // db returns sorted
+      calculateBalances(data);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
@@ -38,18 +41,30 @@ export function UserDashboard() {
   const calculateBalances = (txns: Transaction[]) => {
     const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
-    
-    // Calculate refundable balance (positive amounts)
+
     const refundable = txns
-      .filter(t => Number(t.amount) > 0)
+      .filter(t => t.type === 'credit')
       .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setRefundableBalance(refundable);
-    
-    // Calculate pending charges (negative amounts that are pending)
+
     const pending = txns
-      .filter(t => Number(t.amount) < 0 && t.type === 'debit')
+      .filter(t => t.type === 'debit')
       .reduce((sum, txn) => sum + Math.abs(Number(txn.amount)), 0);
     setPendingCharge(pending);
+  };
+
+  const handleRequest = async (type: 'pay' | 'withdraw', amount: number, details: string) => {
+    if (!profile?.id) return;
+
+    await createRequest({
+      user_id: profile.id,
+      type,
+      amount,
+      details
+    });
+
+    alert('Request submitted successfully!');
+    // Ideally refetch or update state
   };
 
   const formatCurrency = (amount: number) => {
@@ -69,8 +84,10 @@ export function UserDashboard() {
   if (loading) {
     return (
       <UserLayout currentPage="home">
-        <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+        <div className="flex items-center justify-center h-[60vh]">
+          <div className="relative">
+            <div className="w-16 h-16 border-4 border-emerald-100 border-t-emerald-500 rounded-full animate-spin"></div>
+          </div>
         </div>
       </UserLayout>
     );
@@ -78,140 +95,192 @@ export function UserDashboard() {
 
   return (
     <UserLayout currentPage="home">
-      <div className="space-y-6">
+      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+
         {/* Top Cards Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Escrow Balance Card */}
-          <div className="lg:col-span-2 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl p-6 text-white shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Escrow Balance</h3>
-              <div className="flex items-center space-x-2 bg-yellow-400/20 px-3 py-1 rounded-full">
-                <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                <span className="text-sm font-medium">Pending</span>
+          {/* Escrow Balance Card - Premium Gradient */}
+          <div className="lg:col-span-2 relative overflow-hidden rounded-3xl p-6 md:p-8 text-white shadow-xl transition-transform hover:scale-[1.01] duration-300">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700 z-0"></div>
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 z-0"></div>
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 bg-white/10 blur-3xl rounded-full z-0"></div>
+
+            <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white/20 backdrop-blur-md rounded-xl">
+                    <Wallet className="w-6 h-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-emerald-50">Escrow Balance</h3>
+                    <p className="text-emerald-100 text-xs">Total Available Assets</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 bg-emerald-900/30 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-500/30">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-emerald-100">Live Sync</span>
+                </div>
               </div>
-            </div>
-            <div className="mb-6">
-              <p className="text-5xl font-bold mb-2">{formatCurrency(balance)}</p>
-            </div>
-            <div className="pt-4 border-t border-white/20">
-              <p className="text-sm text-white/80 mb-1">TCC Number</p>
-              <p className="text-xl font-mono tracking-wider">{formatCardNumber(profile?.card_number || null)}</p>
+
+              <div className="mb-8">
+                <p className="text-4xl lg:text-6xl font-light tracking-tight text-white drop-shadow-sm">
+                  {formatCurrency(balance)}
+                </p>
+              </div>
+
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className="text-emerald-200/80 text-sm font-medium mb-1 tracking-wider uppercase">TCC Card Number</p>
+                  <p className="text-xl lg:text-2xl font-mono text-white tracking-widest opacity-90">{formatCardNumber(profile?.card_number || null)}</p>
+                </div>
+                <div className="opacity-80">
+                  {/* Card Brand Logo Placeholder */}
+                  <div className="flex -space-x-3">
+                    <div className="w-8 h-8 rounded-full bg-red-500/80"></div>
+                    <div className="w-8 h-8 rounded-full bg-orange-500/80"></div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Balances Card */}
-          <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-            <h3 className="text-xl font-semibold text-white mb-4">Balances</h3>
-            <div className="space-y-4">
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Refundable Balance</p>
-                <p className="text-2xl font-bold text-green-400">+{formatCurrency(refundableBalance)}</p>
+          {/* Balance Breakdown Card - Glass Glassmorphism */}
+          <div className="bg-white/60 backdrop-blur-xl border border-white/50 rounded-3xl p-8 shadow-sm flex flex-col justify-center gap-6">
+            <h3 className="text-slate-800 font-semibold text-lg flex items-center gap-2">
+              <Clock className="w-5 h-5 text-slate-400" />
+              <span>Overview</span>
+            </h3>
+
+            <div className="space-y-6">
+              <div className="group p-4 bg-white/50 rounded-2xl hover:bg-white/80 transition-colors border border-transparent hover:border-emerald-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-slate-500 font-medium group-hover:text-emerald-600 transition-colors">Refundable Balance</p>
+                  <TrendingUp className="w-4 h-4 text-emerald-500" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">+{formatCurrency(refundableBalance)}</p>
               </div>
-              <div>
-                <p className="text-sm text-gray-400 mb-1">Pending Charge</p>
-                <p className="text-2xl font-bold text-white">{formatCurrency(pendingCharge)}</p>
+
+              <div className="group p-4 bg-white/50 rounded-2xl hover:bg-white/80 transition-colors border border-transparent hover:border-rose-100">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm text-slate-500 font-medium group-hover:text-rose-600 transition-colors">Total Debited</p>
+                  <TrendingDown className="w-4 h-4 text-rose-500" />
+                </div>
+                <p className="text-2xl font-bold text-slate-800 group-hover:text-rose-700 transition-colors">{formatCurrency(pendingCharge)}</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="bg-gray-800 rounded-2xl p-6 shadow-lg">
-          <h3 className="text-xl font-semibold text-white mb-4">Quick Actions</h3>
+        {/* Quick Actions - Clean Cards */}
+        <div>
+          <h3 className="text-xl font-light text-slate-800 mb-4 px-2">Quick Actions</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <button className="bg-orange-500/20 hover:bg-orange-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
-              <div className="w-12 h-12 bg-orange-500 rounded-lg flex items-center justify-center">
-                <Bell className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white font-medium text-sm">Notification</span>
-            </button>
-            <button className="bg-red-500/20 hover:bg-red-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
-              <div className="w-12 h-12 bg-red-500 rounded-lg flex items-center justify-center">
-                <ArrowDown className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white font-medium text-sm">Pay</span>
-            </button>
-            <button className="bg-green-500/20 hover:bg-green-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
-              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
-                <ArrowUp className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white font-medium text-sm">Withdrawal</span>
-            </button>
-            <button className="bg-purple-500/20 hover:bg-purple-500/30 p-6 rounded-xl flex flex-col items-center justify-center space-y-2 transition">
-              <div className="w-12 h-12 bg-purple-500 rounded-lg flex items-center justify-center">
-                <MoreHorizontal className="w-6 h-6 text-white" />
-              </div>
-              <span className="text-white font-medium text-sm">More</span>
-            </button>
+            {[
+              { icon: Bell, label: 'Notifications', color: 'orange', onClick: () => { } },
+              { icon: ArrowDown, label: 'Deposit Funds', color: 'emerald', onClick: () => setShowPayModal(true) },
+              { icon: ArrowUp, label: 'Withdraw', color: 'blue', onClick: () => setShowWithdrawModal(true) },
+              { icon: MoreHorizontal, label: 'More Options', color: 'purple', onClick: () => { } }
+            ].map((action, idx) => (
+              <button
+                key={idx}
+                onClick={action.onClick}
+                className="bg-white/70 backdrop-blur-md hover:bg-white border border-white/50 p-6 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 group text-left"
+              >
+                <div className={`w-12 h-12 rounded-xl mb-4 flex items-center justify-center transition-colors
+                        ${action.color === 'emerald' ? 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white' : ''}
+                        ${action.color === 'orange' ? 'bg-orange-100 text-orange-600 group-hover:bg-orange-600 group-hover:text-white' : ''}
+                        ${action.color === 'blue' ? 'bg-blue-100 text-blue-600 group-hover:bg-blue-600 group-hover:text-white' : ''}
+                        ${action.color === 'purple' ? 'bg-purple-100 text-purple-600 group-hover:bg-purple-600 group-hover:text-white' : ''}
+                    `}>
+                  <action.icon className="w-6 h-6" />
+                </div>
+                <span className="text-slate-700 font-medium group-hover:text-slate-900">{action.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Transactions Table */}
-        <div className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden">
-          <div className="p-6 border-b border-gray-700">
-            <h3 className="text-xl font-semibold text-white">Transactions</h3>
+        {/* Transactions Table - Modern Clean */}
+        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-sm overflow-hidden">
+          <div className="p-8 border-b border-slate-100 flex items-center justify-between">
+            <h3 className="text-xl font-semibold text-slate-800">Transaction History</h3>
+            <button className="text-sm text-emerald-600 hover:text-emerald-700 font-medium">View All</button>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="bg-gradient-to-r from-pink-500 to-purple-500">
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">TRANSACTION</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">TOTAL FEE COST (NON REFUNDABLE)</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">REFUNDABLE FEE</th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-white">STATUS</th>
+                <tr className="bg-slate-50/50">
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Transaction</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Amount</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Type</th>
+                  <th className="px-8 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                 </tr>
               </thead>
-              <tbody className="bg-gray-800">
+              <tbody className="divide-y divide-slate-100">
                 {transactions.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400">
-                      <AlertCircle className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                      <p>No transactions found</p>
+                    <td colSpan={4} className="px-8 py-16 text-center text-slate-500">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="p-4 bg-slate-100 rounded-full">
+                          <AlertCircle className="w-8 h-8 text-slate-400" />
+                        </div>
+                        <p className="text-lg">No transactions yet</p>
+                        <p className="text-sm text-slate-400">Your recent activity will appear here</p>
+                      </div>
                     </td>
                   </tr>
                 ) : (
                   <>
                     {transactions.map((transaction) => (
-                      <tr key={transaction.id} className="border-b border-gray-700 hover:bg-gray-750 transition">
-                        <td className="px-6 py-4 text-white">{transaction.description}</td>
-                        <td className="px-6 py-4 text-white">
-                          {Number(transaction.amount) < 0 ? formatCurrency(Math.abs(Number(transaction.amount))) : '-'}
+                      <tr key={transaction.id} className="hover:bg-white/80 transition-colors group">
+                        <td className="px-8 py-5 text-slate-700 font-medium">{transaction.description}</td>
+                        <td className="px-8 py-5">
+                          <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-slate-900'} font-semibold`}>
+                            {formatCurrency(Math.abs(transaction.amount))}
+                          </span>
                         </td>
-                        <td className="px-6 py-4 text-green-400">
-                          {Number(transaction.amount) > 0 ? formatCurrency(Number(transaction.amount)) : '-'}
+                        <td className="px-8 py-5">
+                          <span className="text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-2.5 py-1 rounded-md">
+                            {transaction.type}
+                          </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <span className="px-3 py-1 bg-yellow-400/20 text-yellow-400 rounded-full text-xs font-medium">
-                            Pending
+                        <td className="px-8 py-5">
+                          <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium capitalize
+                             ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                              transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                'bg-slate-100 text-slate-600'}
+                          `}>
+                            <span className={`w-1.5 h-1.5 rounded-full 
+                                ${transaction.status === 'completed' ? 'bg-emerald-500' :
+                                transaction.status === 'pending' ? 'bg-amber-500' :
+                                  'bg-slate-400'}
+                            `}></span>
+                            {transaction.status}
                           </span>
                         </td>
                       </tr>
                     ))}
-                    {/* Total Row */}
-                    <tr className="bg-gradient-to-r from-pink-500 to-purple-500">
-                      <td className="px-6 py-4 text-white font-semibold">Total</td>
-                      <td className="px-6 py-4 text-white font-semibold">
-                        {formatCurrency(
-                          transactions
-                            .filter(t => Number(t.amount) < 0)
-                            .reduce((sum, t) => sum + Math.abs(Number(t.amount)), 0)
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-white font-semibold">
-                        {formatCurrency(
-                          transactions
-                            .filter(t => Number(t.amount) > 0)
-                            .reduce((sum, t) => sum + Number(t.amount), 0)
-                        )}
-                      </td>
-                      <td className="px-6 py-4"></td>
-                    </tr>
                   </>
                 )}
               </tbody>
             </table>
           </div>
         </div>
+
+        {/* Modals */}
+        <RequestModal
+          isOpen={showPayModal}
+          onClose={() => setShowPayModal(false)}
+          type="pay"
+          onSubmit={(amount, details) => handleRequest('pay', amount, details)}
+        />
+        <RequestModal
+          isOpen={showWithdrawModal}
+          onClose={() => setShowWithdrawModal(false)}
+          type="withdraw"
+          onSubmit={(amount, details) => handleRequest('withdraw', amount, details)}
+        />
+
       </div>
     </UserLayout>
   );

@@ -33,6 +33,7 @@ function UserRoutes() {
       <Route path="/transactions" element={<TransactionsPage />} />
       <Route path="/profile" element={<ProfilePage />} />
       <Route path="/help" element={<HelpPage />} />
+      <Route path="/admin" element={<AdminDashboard />} />
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>
   );
