@@ -62,8 +62,8 @@ export function UserLayout({ children, currentPage }: UserLayoutProps) {
                   key={item.id}
                   onClick={() => handleNavigation(item.path)}
                   className={`w-full flex items-center space-x-3 px-4 py-3.5 rounded-xl transition-all duration-200 group relative overflow-hidden ${isActive
-                      ? 'bg-emerald-50 text-emerald-700 font-semibold shadow-sm ring-1 ring-emerald-100'
-                      : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
+                    ? 'bg-emerald-50 text-emerald-700 font-semibold shadow-sm ring-1 ring-emerald-100'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
                     }`}
                 >
                   {isActive && (
@@ -102,7 +102,7 @@ export function UserLayout({ children, currentPage }: UserLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 flex flex-col lg:ml-72 relative z-10 transition-all duration-300">
         {/* Header (Mobile Only primarily, or simplified Desktop) */}
-        <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-lg border-b border-white/50 px-6 py-4 flex items-center justify-between lg:hidden mb-6">
+        <header className="sticky top-0 z-40 bg-white/70 backdrop-blur-lg border-b border-white/50 px-4 sm:px-6 py-4 flex items-center justify-between lg:hidden">
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -141,7 +141,7 @@ export function UserLayout({ children, currentPage }: UserLayoutProps) {
         </div>
 
         {/* Page Content */}
-        <main className="flex-1 px-4 lg:px-8 pb-8 overflow-y-auto">
+        <main className="flex-1 px-4 lg:px-8 pb-8 pt-6 lg:pt-0 overflow-y-auto">
           {children}
         </main>
       </div>

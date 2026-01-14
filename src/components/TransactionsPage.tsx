@@ -3,7 +3,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { fetchUserTransactions } from '../lib/db';
 import { Transaction } from '../types';
 import { UserLayout } from './UserLayout';
-import { AlertCircle, Filter, Search } from 'lucide-react';
+import { AlertCircle, Filter } from 'lucide-react';
 
 export function TransactionsPage() {
   const { profile } = useAuth();
@@ -67,22 +67,22 @@ export function TransactionsPage() {
 
   return (
     <UserLayout currentPage="transactions">
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 px-1 md:px-0">
 
         {/* Header and Controls */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-800">Transactions</h1>
-            <p className="text-slate-500 text-sm mt-1">Track your financial activity</p>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-800">Transactions</h1>
+            <p className="text-slate-500 text-xs md:text-sm mt-1">Track your financial activity</p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <Filter className="w-4 h-4 text-slate-400" />
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <div className="flex-1 sm:flex-none flex items-center gap-2 bg-white px-3 md:px-4 py-2 md:py-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="bg-transparent border-none text-sm font-medium text-slate-700 focus:ring-0 cursor-pointer outline-none hover:text-emerald-600 transition"
+                className="bg-transparent border-none text-[11px] md:text-sm font-medium text-slate-700 focus:ring-0 cursor-pointer outline-none hover:text-emerald-600 transition w-full"
               >
                 <option value="all">Status: All</option>
                 <option value="pending">Pending</option>
@@ -91,12 +91,12 @@ export function TransactionsPage() {
               </select>
             </div>
 
-            <div className="flex items-center gap-2 bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm">
-              <Filter className="w-4 h-4 text-slate-400" />
+            <div className="flex-1 sm:flex-none flex items-center gap-2 bg-white px-3 md:px-4 py-2 md:py-2.5 rounded-xl border border-slate-200 shadow-sm">
+              <Filter className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400" />
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="bg-transparent border-none text-sm font-medium text-slate-700 focus:ring-0 cursor-pointer outline-none hover:text-emerald-600 transition"
+                className="bg-transparent border-none text-[11px] md:text-sm font-medium text-slate-700 focus:ring-0 cursor-pointer outline-none hover:text-emerald-600 transition w-full"
               >
                 <option value="all">Type: All</option>
                 <option value="credit">Credit</option>
@@ -107,8 +107,9 @@ export function TransactionsPage() {
         </div>
 
         {/* Transactions Table Layout */}
-        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden">
+          {/* Desktop Table */}
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-100">
@@ -180,6 +181,65 @@ export function TransactionsPage() {
                 )}
               </tbody>
             </table>
+          </div>
+
+          {/* Mobile Card Layout */}
+          <div className="md:hidden divide-y divide-slate-100">
+            {filteredTransactions.length === 0 ? (
+              <div className="px-6 py-12 text-center text-slate-500">
+                <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <p className="text-base font-medium">No transactions found</p>
+              </div>
+            ) : (
+              <>
+                {filteredTransactions.map((transaction) => {
+                  const isDebit = Number(transaction.amount) < 0;
+                  const isCredit = Number(transaction.amount) >= 0;
+                  return (
+                    <div key={transaction.id} className="p-4 space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <p className="text-sm font-semibold text-slate-800">{transaction.description}</p>
+                          <p className="text-[10px] text-slate-400 mt-0.5">{new Date(transaction.created_at).toLocaleDateString()}</p>
+                        </div>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium capitalize
+                          ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                            transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                              'bg-slate-100 text-slate-600'}
+                        `}>
+                          {transaction.status}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 pt-1">
+                        <div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Fee</p>
+                          <p className="text-xs font-medium text-slate-600">
+                            {isDebit ? formatCurrency(Math.abs(Number(transaction.amount))) : '-'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Refundable</p>
+                          <p className={`text-xs font-bold ${isCredit ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {isCredit ? formatCurrency(Number(transaction.amount)) : '-'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {/* Summary Mobile */}
+                <div className="bg-slate-50/80 p-5 space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-slate-600">Total Fees:</span>
+                    <span className="text-xs font-bold text-slate-800">{formatCurrency(totalNonRefundable)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-slate-600">Total Refundable:</span>
+                    <span className="text-sm font-bold text-emerald-600">+{formatCurrency(totalRefundable)}</span>
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

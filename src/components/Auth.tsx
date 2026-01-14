@@ -109,31 +109,31 @@ export function Auth() {
       </div>
 
       {/* Content */}
-      <div className="relative z-10 w-full max-w-2xl animate-in fade-in zoom-in duration-500 delay-100">
+      <div className="relative z-10 w-full max-w-2xl animate-in fade-in zoom-in duration-500 delay-100 py-4">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex p-3 rounded-full bg-white/40 backdrop-blur-md mb-4 shadow-sm border border-white/50">
-            <Sparkles className="w-6 h-6 text-emerald-600" />
+        <div className="text-center mb-6 md:mb-8">
+          <div className="inline-flex p-2.5 md:p-3 rounded-full bg-white/40 backdrop-blur-md mb-3 md:mb-4 shadow-sm border border-white/50">
+            <Sparkles className="w-5 h-5 md:w-6 md:h-6 text-emerald-600" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-light text-slate-800 mb-2 tracking-tight">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-light text-slate-800 mb-2 tracking-tight px-4 leading-tight">
             Therapeutic Service<span className="font-semibold text-emerald-700"> Access Card</span>
           </h1>
-          <p className="text-slate-600 font-light text-lg">
+          <p className="text-slate-600 font-light text-base md:text-lg px-4">
             Your trusted journey to wellness and peace
           </p>
         </div>
 
         {/* Auth Card */}
-        <div className="bg-white/60 backdrop-blur-xl rounded-3xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] border border-white/50 p-6 md:p-10 relative overflow-hidden">
+        <div className="bg-white/60 backdrop-blur-xl rounded-2xl md:rounded-3xl shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] border border-white/50 p-5 sm:p-8 md:p-10 relative overflow-hidden">
           {/* Decorative soft gradients */}
           <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-emerald-200/20 blur-3xl pointer-events-none"></div>
           <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-64 h-64 rounded-full bg-purple-200/20 blur-3xl pointer-events-none"></div>
 
           {/* Tabs */}
-          <div className="flex p-1 bg-slate-100/50 rounded-xl mb-8 relative z-10">
+          <div className="flex p-1 bg-slate-100/50 rounded-xl mb-6 md:mb-8 relative z-10">
             <button
               onClick={() => { setIsSignUp(false); setError(''); }}
-              className={`flex-1 py-3 text-center text-sm font-medium rounded-lg transition-all duration-300 ${!isSignUp
+              className={`flex-1 py-2.5 md:py-3 text-center text-xs md:text-sm font-medium rounded-lg transition-all duration-300 ${!isSignUp
                 ? 'bg-white text-emerald-700 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -142,7 +142,7 @@ export function Auth() {
             </button>
             <button
               onClick={() => { setIsSignUp(true); setError(''); }}
-              className={`flex-1 py-3 text-center text-sm font-medium rounded-lg transition-all duration-300 ${isSignUp
+              className={`flex-1 py-2.5 md:py-3 text-center text-xs md:text-sm font-medium rounded-lg transition-all duration-300 ${isSignUp
                 ? 'bg-white text-emerald-700 shadow-sm'
                 : 'text-slate-500 hover:text-slate-700'
                 }`}
@@ -151,7 +151,7 @@ export function Auth() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+          <form onSubmit={handleSubmit} className="space-y-4 md:space-y-5 relative z-10 max-h-[70vh] md:max-h-none overflow-y-auto px-1 scrollbar-hide">
             {/* Email */}
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -162,7 +162,7 @@ export function Auth() {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                className="block w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all duration-300"
+                className="block w-full pl-11 pr-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all duration-300"
                 placeholder="Email Address"
                 required
               />
@@ -171,7 +171,7 @@ export function Auth() {
             {/* Sign Up Fields */}
             {isSignUp && (
               <div className="space-y-4 animate-in slide-in-from-bottom-4 duration-300">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* First Name */}
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -182,7 +182,7 @@ export function Auth() {
                       type="text"
                       value={formData.first_name}
                       onChange={(e) => handleInputChange('first_name', e.target.value)}
-                      className="block w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                      className="block w-full pl-11 pr-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                       placeholder="First Name"
                       required
                     />
@@ -194,7 +194,7 @@ export function Auth() {
                       type="text"
                       value={formData.last_name}
                       onChange={(e) => handleInputChange('last_name', e.target.value)}
-                      className="block w-full px-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                      className="block w-full px-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                       placeholder="Last Name"
                       required
                     />
@@ -210,19 +210,19 @@ export function Auth() {
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="block w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                    className="block w-full pl-11 pr-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                     placeholder="Mobile Number"
                     required
                   />
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider pl-1">Personal Details</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Personal</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <select
                       value={formData.gender}
                       onChange={(e) => handleInputChange('gender', e.target.value)}
-                      className="block w-full px-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                      className="block w-full px-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                       required
                     >
                       <option value="">Gender</option>
@@ -236,40 +236,40 @@ export function Auth() {
                         type="date"
                         value={formData.date_of_birth}
                         onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
-                        className="block w-full pl-11 pr-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                        className="block w-full pl-11 pr-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                         required
                       />
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <h3 className="text-sm font-semibold text-slate-500 uppercase tracking-wider pl-1">Service Preferences</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-3 pt-2">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest pl-1">Services</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <input
                       type="number"
                       value={formData.deposit_amount}
                       onChange={(e) => handleInputChange('deposit_amount', e.target.value)}
-                      className="block w-full px-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
-                      placeholder="Deposit Amount ($)"
+                      className="block w-full px-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                      placeholder="Deposit ($)"
                       required
                     />
                     <input
                       type="text"
                       value={formData.duration}
                       onChange={(e) => handleInputChange('duration', e.target.value)}
-                      className="block w-full px-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
-                      placeholder="Duration (Minutes)"
+                      className="block w-full px-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                      placeholder="Duration (Min)"
                       required
                     />
                   </div>
                   <select
                     value={formData.service_type}
                     onChange={(e) => handleInputChange('service_type', e.target.value)}
-                    className="block w-full px-4 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                    className="block w-full px-4 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                     required
                   >
-                    <option value="">Select Service Type</option>
+                    <option value="">Service Type</option>
                     <option value="massage">Massage Therapy</option>
                     <option value="counseling">Counseling Session</option>
                     <option value="wellness">Wellness Consultation</option>
@@ -278,10 +278,10 @@ export function Auth() {
                 </div>
 
                 <div className="pt-2">
-                  <label className="flex flex-col gap-2 p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50/50 cursor-pointer transition-all group text-center">
-                    <div className="flex flex-col items-center justify-center gap-2 text-slate-500 group-hover:text-emerald-600">
-                      <Upload className="w-8 h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
-                      <span className="text-sm font-medium">{formData.profile_picture ? formData.profile_picture.name : 'Upload Profile Photo'}</span>
+                  <label className="flex flex-col gap-2 p-3 md:p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-400 hover:bg-emerald-50/50 cursor-pointer transition-all group text-center">
+                    <div className="flex flex-col items-center justify-center gap-1 text-slate-500 group-hover:text-emerald-600">
+                      <Upload className="w-6 h-6 md:w-8 md:h-8 opacity-50 group-hover:opacity-100 transition-opacity" />
+                      <span className="text-xs md:text-sm font-medium">{formData.profile_picture ? formData.profile_picture.name : 'Upload Photo'}</span>
                     </div>
                     <input
                       type="file"
@@ -304,7 +304,7 @@ export function Auth() {
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="block w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                className="block w-full pl-11 pr-12 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                 placeholder="Password"
                 required
                 minLength={6}
@@ -328,7 +328,7 @@ export function Auth() {
                   type={showVerifyPassword ? 'text' : 'password'}
                   value={formData.verifyPassword}
                   onChange={(e) => handleInputChange('verifyPassword', e.target.value)}
-                  className="block w-full pl-11 pr-12 py-3.5 bg-white/50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                  className="block w-full pl-11 pr-12 py-3 md:py-3.5 bg-white/50 border border-slate-200 rounded-xl text-sm md:text-base text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                   placeholder="Confirm Password"
                   required
                   minLength={6}
@@ -344,8 +344,8 @@ export function Auth() {
             )}
 
             {error && (
-              <div className="p-4 bg-red-50 text-red-600 rounded-xl text-sm flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
-                <span className="mt-0.5 block w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+              <div className="p-3 bg-red-50 text-red-600 rounded-xl text-xs flex items-start gap-2 animate-in fade-in slide-in-from-top-2">
+                <span className="mt-1 block w-1.5 h-1.5 rounded-full bg-red-500 flex-shrink-0"></span>
                 {error}
               </div>
             )}
@@ -353,7 +353,7 @@ export function Auth() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-4 rounded-xl font-semibold text-lg shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-emerald-600 to-teal-700 text-white py-3.5 md:py-4 rounded-xl font-semibold text-base md:text-lg shadow-lg hover:shadow-emerald-500/30 hover:scale-[1.01] active:scale-[0.99] transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -369,8 +369,8 @@ export function Auth() {
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-slate-500 text-sm">
+          <div className="mt-5 md:mt-6 text-center">
+            <p className="text-slate-500 text-[10px] md:text-xs">
               Protected by 256-bit encryption. Your privacy is our priority.
             </p>
           </div>

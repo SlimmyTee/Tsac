@@ -89,27 +89,27 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
             <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" onClick={onClose}></div>
             <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden transform transition-all animate-in slide-in-from-bottom-4">
                 {/* Header */}
-                <div className={`px-8 py-6 border-b border-slate-100 ${type === 'pay' ? 'bg-emerald-50/50' : 'bg-blue-50/50'}`}>
+                <div className={`px-6 md:px-8 py-4 md:py-6 border-b border-slate-100 ${type === 'pay' ? 'bg-emerald-50/50' : 'bg-blue-50/50'}`}>
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-slate-800 capitalize">
+                        <h2 className="text-lg md:text-xl font-bold text-slate-800 capitalize">
                             {type === 'pay' ? 'Deposit Funds' : 'Withdraw Funds'}
                         </h2>
                         <button
                             onClick={onClose}
-                            className="p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:shadow-sm transition"
+                            className="p-1.5 md:p-2 bg-white rounded-full text-slate-400 hover:text-slate-600 hover:shadow-sm transition"
                         >
-                            <X className="w-5 h-5" />
+                            <X className="w-4 h-4 md:w-5 md:h-5" />
                         </button>
                     </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="p-8 space-y-6">
+                <form onSubmit={handleSubmit} className="p-6 md:p-8 space-y-5 md:space-y-6">
                     <div className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Amount</label>
+                            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2">Amount</label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                                    <span className="text-slate-400 font-semibold">$</span>
+                                    <span className="text-slate-400 font-semibold text-base md:text-lg">$</span>
                                 </div>
                                 <input
                                     type="number"
@@ -117,18 +117,18 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
                                     required
                                     value={amount}
                                     onChange={(e) => setAmount(e.target.value)}
-                                    className="block w-full pl-8 pr-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-lg font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
+                                    className="block w-full pl-8 pr-4 py-3 md:py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-base md:text-lg font-medium placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all"
                                     placeholder="0.00"
                                 />
                             </div>
                         </div>
 
                         {type === 'pay' && (
-                            <div className="space-y-4 pt-2">
+                            <div className="space-y-4 pt-1">
                                 <div className="p-4 border border-slate-200 rounded-xl bg-slate-50/50">
-                                    <div className="flex items-center gap-3 mb-4">
-                                        <CreditCard className="w-5 h-5 text-emerald-600" />
-                                        <span className="text-sm font-semibold text-slate-700">Payment Details</span>
+                                    <div className="flex items-center gap-3 mb-3 md:mb-4">
+                                        <CreditCard className="w-4 h-4 md:w-5 md:h-5 text-emerald-600" />
+                                        <span className="text-xs md:text-sm font-semibold text-slate-700">Payment Details</span>
                                     </div>
 
                                     <div className="space-y-3">
@@ -137,7 +137,7 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
                                             placeholder="Card Number"
                                             value={cardNumber}
                                             onChange={(e) => setCardNumber(e.target.value)}
-                                            className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                            className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                                         />
                                         <div className="grid grid-cols-2 gap-3">
                                             <input
@@ -145,14 +145,14 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
                                                 placeholder="MM/YY"
                                                 value={expiry}
                                                 onChange={(e) => setExpiry(e.target.value)}
-                                                className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                                className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                                             />
                                             <input
                                                 type="text"
                                                 placeholder="CVV"
                                                 value={cvv}
                                                 onChange={(e) => setCvv(e.target.value)}
-                                                className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
+                                                className="block w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none"
                                             />
                                         </div>
                                     </div>
@@ -161,11 +161,11 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
                         )}
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-2">Description / Note</label>
+                            <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1.5 md:mb-2">Description / Note</label>
                             <textarea
                                 value={details}
                                 onChange={(e) => setDetails(e.target.value)}
-                                className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all resize-none h-24"
+                                className="block w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 text-sm md:text-base placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 focus:bg-white transition-all resize-none h-20 md:h-24"
                                 placeholder={type === 'pay' ? "E.g. Monthly Deposit" : "E.g. Withdrawal for Services"}
                             />
                         </div>
@@ -174,13 +174,13 @@ export function RequestModal({ isOpen, onClose, onSubmit, type }: RequestModalPr
                     <button
                         type="submit"
                         disabled={loading}
-                        className={`w-full py-4 rounded-xl flex items-center justify-center space-x-2 font-semibold text-white shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed
+                        className={`w-full py-3.5 md:py-4 rounded-xl flex items-center justify-center space-x-2 font-semibold text-white text-sm md:text-base shadow-lg transition-all transform hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed
               ${type === 'pay' ? 'bg-gradient-to-r from-emerald-600 to-teal-700 hover:shadow-emerald-500/25' : 'bg-gradient-to-r from-blue-600 to-indigo-700 hover:shadow-blue-500/25'}
             `}
                     >
                         {loading ? (
                             <>
-                                <Loader2 className="w-5 h-5 animate-spin" />
+                                <Loader2 className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
                                 <span>Processing...</span>
                             </>
                         ) : (

@@ -63,7 +63,8 @@ export function UserManagement({ user, onBack }: any) {
     }).format(amount);
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
@@ -103,40 +104,40 @@ export function UserManagement({ user, onBack }: any) {
           <span className="font-medium">Back to User List</span>
         </button>
 
-        <div className="grid md:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="md:col-span-2">
-            <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-8 rounded-3xl shadow-sm h-full flex flex-col justify-between">
-              <div className="flex justify-between items-start mb-6">
+            <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm h-full flex flex-col justify-between">
+              <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-slate-800">{user.full_name}</h1>
-                  <p className="text-slate-500 text-lg">{user.email}</p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{user.full_name}</h1>
+                  <p className="text-slate-500 text-sm md:text-lg">{user.email}</p>
                 </div>
-                <div className="px-3 py-1 bg-slate-200 rounded-full text-xs font-bold text-slate-600 uppercase tracking-wider">
+                <div className="px-3 py-1 bg-slate-200 rounded-full text-[10px] md:text-xs font-bold text-slate-600 uppercase tracking-wider">
                   User Profile
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-                  <p className="text-emerald-800 text-xs font-semibold uppercase tracking-wider mb-1">Current Balance</p>
-                  <p className="text-3xl font-bold text-emerald-700">{formatCurrency(balance)}</p>
+                  <p className="text-emerald-800 text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1">Current Balance</p>
+                  <p className="text-2xl md:text-3xl font-bold text-emerald-700">{formatCurrency(balance)}</p>
                 </div>
                 <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-wider mb-1">TCC Card Number</p>
-                  <p className="text-xl font-mono text-slate-700 tracking-tight">{formatCardNumber(user.card_number)}</p>
+                  <p className="text-slate-500 text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1">TCC Card Number</p>
+                  <p className="text-lg md:text-xl font-mono text-slate-700 tracking-tight">{formatCardNumber(user.card_number)}</p>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-3xl p-8 text-white shadow-xl flex flex-col justify-center">
-            <h3 className="text-lg font-medium text-slate-300 mb-6 flex items-center gap-2">
+          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl md:rounded-3xl p-6 md:p-8 text-white shadow-xl flex flex-col justify-center">
+            <h3 className="text-base md:text-lg font-medium text-slate-300 mb-4 md:mb-6 flex items-center gap-2">
               <Wallet className="w-5 h-5" /> Summary
             </h3>
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-slate-400">Total Credits</span>
-                <span className="text-emerald-400 font-bold text-xl">
+                <span className="text-slate-400 text-sm md:text-base">Total Credits</span>
+                <span className="text-emerald-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     transactions
                       .filter((t) => Number(t.amount) > 0)
@@ -145,8 +146,8 @@ export function UserManagement({ user, onBack }: any) {
                 </span>
               </div>
               <div className="flex justify-between items-center pb-2">
-                <span className="text-slate-400">Total Debits</span>
-                <span className="text-rose-400 font-bold text-xl">
+                <span className="text-slate-400 text-sm md:text-base">Total Debits</span>
+                <span className="text-rose-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     Math.abs(transactions
                       .filter((t) => Number(t.amount) < 0)
@@ -158,12 +159,12 @@ export function UserManagement({ user, onBack }: any) {
           </div>
         </div>
 
-        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-3xl shadow-sm overflow-hidden">
-          <div className="p-8 border-b border-slate-100 flex items-center justify-between">
-            <h3 className="text-xl font-bold text-slate-800">Transaction History</h3>
+        <div className="bg-white/70 backdrop-blur-xl border border-white/60 rounded-2xl md:rounded-3xl shadow-sm overflow-hidden">
+          <div className="p-6 md:p-8 border-b border-slate-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <h3 className="text-lg md:text-xl font-bold text-slate-800">Transaction History</h3>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-500/20"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-emerald-600 transition shadow-lg hover:shadow-emerald-500/20"
             >
               <Plus className="w-4 h-4" />
               <span className="font-semibold text-sm">Add Transaction</span>
@@ -172,39 +173,41 @@ export function UserManagement({ user, onBack }: any) {
 
           <div className="divide-y divide-slate-100">
             {transactions.length === 0 ? (
-              <div className="p-16 text-center">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CreditCard className="w-8 h-8 text-slate-400" />
+              <div className="p-12 md:p-16 text-center">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CreditCard className="w-6 h-6 md:w-8 md:h-8 text-slate-400" />
                 </div>
-                <h4 className="text-lg font-medium text-slate-800">No transactions recorded</h4>
-                <p className="text-slate-500">This user has no history yet.</p>
+                <h4 className="text-base md:text-lg font-medium text-slate-800">No transactions recorded</h4>
+                <p className="text-sm text-slate-500">This user has no history yet.</p>
               </div>
             ) : (
               transactions.map((transaction) => {
                 const isCredit = Number(transaction.amount) >= 0;
                 return (
-                  <div key={transaction.id} className="p-6 hover:bg-white/80 transition flex items-center justify-between group">
-                    <div className="flex items-start gap-4">
-                      <div className={`p-3 rounded-xl ${isCredit ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
-                        {isCredit ? <Plus className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+                  <div key={transaction.id} className="p-4 md:p-6 hover:bg-white/80 transition flex items-center justify-between group gap-4">
+                    <div className="flex items-start gap-3 md:gap-4">
+                      <div className={`p-2.5 md:p-3 rounded-xl ${isCredit ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
+                        {isCredit ? <Plus className="w-4 h-4 md:w-5 md:h-5" /> : <CreditCard className="w-4 h-4 md:w-5 md:h-5" />}
                       </div>
-                      <div>
-                        <p className="font-semibold text-slate-800 mb-0.5">{transaction.description}</p>
-                        <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-                          <Calendar className="w-3 h-3" />
-                          {formatDate(transaction.created_at)}
-                          <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[10px] ${isCredit ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-slate-800 mb-0.5 text-sm md:text-base truncate">{transaction.description}</p>
+                        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] md:text-xs text-slate-500 font-medium">
+                          <div className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(transaction.created_at)}
+                          </div>
+                          <span className={`px-2 py-0.5 rounded-full uppercase tracking-wider text-[8px] md:text-[10px] ${isCredit ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
                             {transaction.type}
                           </span>
                         </div>
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <p className={`text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <div className="text-right flex-shrink-0">
+                      <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
                       </p>
-                      <p className="text-xs text-slate-400 font-medium uppercase tracking-wide">
+                      <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
                         {transaction.status}
                       </p>
                     </div>

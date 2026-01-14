@@ -40,19 +40,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       if (session) {
-        extractProfileFromSession(session);
+        fetchProfile(session.user.id);
       } else {
         setLoading(false);
       }
     });
 
-    // 2. Listen for changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        extractProfileFromSession(session);
+        fetchProfile(session.user.id);
       } else {
         setProfile(null);
         setLoading(false);
@@ -62,29 +61,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const extractProfileFromSession = (session: Session) => {
-    // In this simple version, we trust the metadata in the session
-    // For more security/updates, you should fetch from a 'profiles' table.
-    const meta = session.user.user_metadata;
-    const userProfile: Profile = {
-      id: session.user.id,
-      email: session.user.email || '',
-      first_name: meta.first_name || '',
-      last_name: meta.last_name || '',
-      phone: meta.phone,
-      role: meta.role || 'user',
-      avatar_url: meta.avatar_url,
-      gender: meta.gender,
-      law_enforcement_affiliated: meta.law_enforcement_affiliated,
-      date_of_birth: meta.date_of_birth,
-      deposit_amount: meta.deposit_amount,
-      duration: meta.duration,
-      service_type: meta.service_type,
-      personal_items: meta.personal_items,
-      card_number: meta.card_number,
-    };
-    setProfile(userProfile);
-    setLoading(false);
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (error) {
+        console.error('Error fetching profile:', error);
+      } else if (data) {
+        setProfile(data as Profile);
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching profile:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signUp = async (userData: {
