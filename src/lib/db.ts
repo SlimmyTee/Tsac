@@ -147,4 +147,13 @@ export const createAdminTransaction = async (userId: string, amount: number, typ
         }]);
 
     if (error) throw error;
-}
+};
+
+export const updateTransactionStatus = async (transactionId: string, status: 'completed' | 'pending' | 'failed') => {
+    const { error } = await supabase
+        .from('transactions')
+        .update({ status })
+        .eq('id', transactionId);
+
+    if (error) throw error;
+};

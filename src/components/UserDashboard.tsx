@@ -165,7 +165,7 @@ export function UserDashboard() {
                   <p className="text-sm text-slate-500 font-medium group-hover:text-rose-600 transition-colors">Debited</p>
                   <TrendingDown className="w-4 h-4 text-rose-500" />
                 </div>
-                <p className="text-xl md:text-2xl font-bold text-slate-800 group-hover:text-rose-700 transition-colors">{formatCurrency(pendingCharge)}</p>
+                <p className="text-xl md:text-2xl font-bold text-rose-600 group-hover:text-rose-700 transition-colors">{formatCurrency(pendingCharge)}</p>
               </div>
             </div>
           </div>
@@ -235,7 +235,7 @@ export function UserDashboard() {
                     <tr key={transaction.id} className="hover:bg-white/80 transition-colors group">
                       <td className="px-8 py-5 text-slate-700 font-medium">{transaction.description}</td>
                       <td className="px-8 py-5">
-                        <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-slate-900'} font-semibold`}>
+                        <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-semibold`}>
                           {formatCurrency(Math.abs(transaction.amount))}
                         </span>
                       </td>
@@ -277,7 +277,7 @@ export function UserDashboard() {
                 <div key={transaction.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <p className="font-medium text-slate-800 text-sm">{transaction.description}</p>
-                    <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-slate-900'}`}>
+                    <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {formatCurrency(Math.abs(transaction.amount))}
                     </span>
                   </div>

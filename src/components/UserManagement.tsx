@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchUserTransactions, createAdminTransaction } from '../lib/db';
+import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus } from '../lib/db';
 import { Transaction } from '../types';
-import { ArrowLeft, Plus, CreditCard, Wallet, Calendar } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock } from 'lucide-react';
 
 export function UserManagement({ user, onBack }: any) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -53,6 +53,17 @@ export function UserManagement({ user, onBack }: any) {
     } catch (error) {
       console.error('Error adding transaction:', error);
       alert('Error creating transaction');
+    }
+  };
+
+  const handleUpdateStatus = async (transactionId: string, status: 'completed' | 'pending' | 'failed') => {
+    if (!confirm(`Are you sure you want to update this transaction status to ${status}?`)) return;
+    try {
+      await updateTransactionStatus(transactionId, status);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Error updating transaction status:', error);
+      alert('Error updating transaction status');
     }
   };
 
@@ -203,13 +214,25 @@ export function UserManagement({ user, onBack }: any) {
                       </div>
                     </div>
 
-                    <div className="text-right flex-shrink-0">
-                      <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
-                      </p>
-                      <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
-                        {transaction.status}
-                      </p>
+                    <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
+                      <div className="text-right">
+                        <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
+                        </p>
+                        <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
+                          {transaction.status}
+                        </p>
+                      </div>
+
+                      {transaction.status !== 'pending' && (
+                        <button
+                          onClick={() => handleUpdateStatus(transaction.id, 'pending')}
+                          className="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition shadow-sm"
+                          title="Set to Pending"
+                        >
+                          <Clock className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
                   </div>
                 )

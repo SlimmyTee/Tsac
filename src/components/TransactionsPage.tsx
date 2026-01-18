@@ -144,7 +144,7 @@ export function TransactionsPage() {
                             <p className="text-xs text-slate-400 mt-0.5">{new Date(transaction.created_at).toLocaleDateString()}</p>
                           </td>
                           <td className="px-8 py-5">
-                            <span className="text-slate-500 font-medium">
+                            <span className="text-rose-600 font-medium">
                               {isDebit ? formatCurrency(Math.abs(Number(transaction.amount))) : '-'}
                             </span>
                           </td>
@@ -169,7 +169,7 @@ export function TransactionsPage() {
                     {/* Summary Footer */}
                     <tr className="bg-slate-50/50 border-t border-slate-200">
                       <td className="px-8 py-6 text-slate-800 font-bold text-right">Totals</td>
-                      <td className="px-8 py-6 text-slate-800 font-bold">
+                      <td className="px-8 py-6 text-rose-600 font-bold">
                         {formatCurrency(totalNonRefundable)}
                       </td>
                       <td className="px-8 py-6 text-emerald-600 font-bold">
@@ -213,7 +213,7 @@ export function TransactionsPage() {
                       <div className="grid grid-cols-2 gap-4 pt-1">
                         <div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Fee</p>
-                          <p className="text-xs font-medium text-slate-600">
+                          <p className="text-xs font-medium text-rose-600">
                             {isDebit ? formatCurrency(Math.abs(Number(transaction.amount))) : '-'}
                           </p>
                         </div>
@@ -231,7 +231,7 @@ export function TransactionsPage() {
                 <div className="bg-slate-50/80 p-5 space-y-2">
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold text-slate-600">Total Fees:</span>
-                    <span className="text-xs font-bold text-slate-800">{formatCurrency(totalNonRefundable)}</span>
+                    <span className="text-xs font-bold text-rose-600">{formatCurrency(totalNonRefundable)}</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-xs font-semibold text-slate-600">Total Refundable:</span>
