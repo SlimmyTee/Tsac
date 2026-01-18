@@ -50,7 +50,7 @@ export function HelpPage() {
                   <Mail className="w-5 h-5 md:w-6 md:h-6 text-blue-600 group-hover:text-white transition-colors" />
                 </div>
                 <h3 className="font-semibold text-slate-800 text-sm md:text-base mb-1">Email</h3>
-                <p className="text-xs md:text-sm text-slate-500 mb-2 md:mb-3">Get a reply in 24h.</p>
+                <p className="text-xs md:text-sm text-slate-500 mb-2 md:mb-3"><a href='mailto:therapeuticserviceaccesscard@gmail.com'>therapeuticserviceaccesscard@gmail.com</a></p>
               </div>
 
               <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-5 md:p-6 rounded-2xl shadow-sm hover:shadow-md transition group cursor-pointer">
@@ -59,7 +59,7 @@ export function HelpPage() {
                 </div>
                 <h3 className="font-semibold text-slate-800 text-sm md:text-base mb-1">Phone</h3>
                 <p className="text-xs md:text-sm text-slate-500 mb-2 md:mb-3">Mon-Fri, 9am - 5pm.</p>
-                <span className="text-purple-600 text-xs md:text-sm font-medium flex items-center">Call Us <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 ml-1" /></span>
+                <span className="text-purple-600 text-xs md:text-sm font-medium flex items-center"><a href='tel:+12137954051'>+1 (213) 795-4051</a> <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 ml-1" /></span>
               </div>
             </div>
           </div>
