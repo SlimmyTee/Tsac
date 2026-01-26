@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchUserTransactions, createRequest } from '../lib/db';
+import { fetchUserTransactions } from '../lib/db';
 import { Transaction } from '../types';
 import { UserLayout } from './UserLayout';
 import { Bell, ArrowDown, ArrowUp, MoreHorizontal, AlertCircle, Wallet, TrendingUp, TrendingDown, Clock } from 'lucide-react';
-import { RequestModal } from './RequestModal';
+import { SupportModal } from './SupportModal';
 
 export function UserDashboard() {
   const { profile } = useAuth();
@@ -15,8 +15,8 @@ export function UserDashboard() {
   const [loading, setLoading] = useState(true);
 
   // Modal State
-  const [showPayModal, setShowPayModal] = useState(false);
-  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [showSupportModal, setShowSupportModal] = useState(false);
+  const [supportType, setSupportType] = useState<'deposit' | 'withdraw'>('deposit');
 
   useEffect(() => {
     if (profile?.id) {
@@ -53,18 +53,9 @@ export function UserDashboard() {
     setPendingCharge(pending);
   };
 
-  const handleRequest = async (type: 'pay' | 'withdraw', amount: number, details: string) => {
-    if (!profile?.id) return;
-
-    await createRequest({
-      user_id: profile.id,
-      type,
-      amount,
-      details
-    });
-
-    alert('Request submitted successfully!');
-    // Ideally refetch or update state
+  const handleOpenSupport = (type: 'deposit' | 'withdraw') => {
+    setSupportType(type);
+    setShowSupportModal(true);
   };
 
   const formatCurrency = (amount: number) => {
@@ -77,8 +68,10 @@ export function UserDashboard() {
   };
 
   const formatCardNumber = (cardNumber: string | null) => {
-    if (!cardNumber) return '5296 8857 8444 5778';
-    return cardNumber.replace(/(\d{4})(?=\d)/g, '$1 ');
+    if (profile?.card_number_visible && cardNumber) {
+      return cardNumber.replace(/(\d{4})(?=\d)/g, '$1 ');
+    }
+    return '•••• •••• •••• ••••';
   };
 
   if (loading) {
@@ -177,8 +170,8 @@ export function UserDashboard() {
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-4">
             {[
               { icon: Bell, label: 'Alerts', color: 'orange', onClick: () => { } },
-              { icon: ArrowDown, label: 'Deposit', color: 'emerald', onClick: () => setShowPayModal(true) },
-              { icon: ArrowUp, label: 'Withdraw', color: 'blue', onClick: () => setShowWithdrawModal(true) },
+              { icon: ArrowDown, label: 'Deposit', color: 'emerald', onClick: () => handleOpenSupport('deposit') },
+              { icon: ArrowUp, label: 'Withdraw', color: 'blue', onClick: () => handleOpenSupport('withdraw') },
               { icon: MoreHorizontal, label: 'More', color: 'purple', onClick: () => { } }
             ].map((action, idx) => (
               <button
@@ -300,17 +293,10 @@ export function UserDashboard() {
         </div>
 
         {/* Modals */}
-        <RequestModal
-          isOpen={showPayModal}
-          onClose={() => setShowPayModal(false)}
-          type="pay"
-          onSubmit={(amount, details) => handleRequest('pay', amount, details)}
-        />
-        <RequestModal
-          isOpen={showWithdrawModal}
-          onClose={() => setShowWithdrawModal(false)}
-          type="withdraw"
-          onSubmit={(amount, details) => handleRequest('withdraw', amount, details)}
+        <SupportModal
+          isOpen={showSupportModal}
+          onClose={() => setShowSupportModal(false)}
+          type={supportType}
         />
 
       </div>

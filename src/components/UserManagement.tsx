@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus } from '../lib/db';
-import { Transaction } from '../types';
-import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock } from 'lucide-react';
+import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus, updateProfile } from '../lib/db';
+import { Transaction, Profile } from '../types';
+import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock, Edit2, Check, X, Eye, EyeOff } from 'lucide-react';
 
 export function UserManagement({ user, onBack }: any) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -13,6 +13,12 @@ export function UserManagement({ user, onBack }: any) {
     type: 'credit' as 'credit' | 'debit',
     description: '',
   });
+
+  // Card Editing State
+  const [currentUser, setCurrentUser] = useState<Profile>(user);
+  const [isEditingCard, setIsEditingCard] = useState(false);
+  const [newCardNumber, setNewCardNumber] = useState(user.card_number || '');
+  const [isSavingCard, setIsSavingCard] = useState(false);
 
   useEffect(() => {
     fetchTransactions();
@@ -64,6 +70,20 @@ export function UserManagement({ user, onBack }: any) {
     } catch (error) {
       console.error('Error updating transaction status:', error);
       alert('Error updating transaction status');
+    }
+  };
+
+  const handleUpdateCardNumber = async () => {
+    setIsSavingCard(true);
+    try {
+      const updatedUser = await updateProfile(user.id, { card_number: newCardNumber });
+      setCurrentUser(updatedUser);
+      setIsEditingCard(false);
+    } catch (error) {
+      console.error('Error updating card number:', error);
+      alert('Error updating card number');
+    } finally {
+      setIsSavingCard(false);
     }
   };
 
@@ -120,8 +140,8 @@ export function UserManagement({ user, onBack }: any) {
             <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-6 md:p-8 rounded-2xl md:rounded-3xl shadow-sm h-full flex flex-col justify-between">
               <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
                 <div>
-                  <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{user.full_name}</h1>
-                  <p className="text-slate-500 text-sm md:text-lg">{user.email}</p>
+                  <h1 className="text-2xl md:text-3xl font-bold text-slate-800">{currentUser.full_name}</h1>
+                  <p className="text-slate-500 text-sm md:text-lg">{currentUser.email}</p>
                 </div>
                 <div className="px-3 py-1 bg-slate-200 rounded-full text-[10px] md:text-xs font-bold text-slate-600 uppercase tracking-wider">
                   User Profile
@@ -133,9 +153,69 @@ export function UserManagement({ user, onBack }: any) {
                   <p className="text-emerald-800 text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1">Current Balance</p>
                   <p className="text-2xl md:text-3xl font-bold text-emerald-700">{formatCurrency(balance)}</p>
                 </div>
-                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
-                  <p className="text-slate-500 text-[10px] md:text-xs font-semibold uppercase tracking-wider mb-1">TCC Card Number</p>
-                  <p className="text-lg md:text-xl font-mono text-slate-700 tracking-tight">{formatCardNumber(user.card_number)}</p>
+                <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 group relative">
+                  <div className="flex justify-between items-start mb-1">
+                    <p className="text-slate-500 text-[10px] md:text-xs font-semibold uppercase tracking-wider">TCC Card Number</p>
+                    {!isEditingCard && (
+                      <button
+                        onClick={() => setIsEditingCard(true)}
+                        className="p-1 hover:bg-slate-200 rounded-md transition-colors text-slate-400 hover:text-emerald-600"
+                        title="Edit Card Number"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <button
+                      onClick={async () => {
+                        const newVisible = !currentUser.card_number_visible;
+                        try {
+                          const updated = await updateProfile(user.id, { card_number_visible: newVisible });
+                          setCurrentUser(updated);
+                        } catch (error: any) {
+                          console.error('Error toggling card visibility:', error);
+                          const errorMessage = error.message || 'Unknown error';
+                          alert(`Error updating visibility: ${errorMessage}\n\nPlease ensure you have run the required SQL migration to add the "card_number_visible" column.`);
+                        }
+                      }}
+                      className="p-1 hover:bg-slate-200 rounded-md transition-colors text-slate-400 hover:text-emerald-600"
+                      title={currentUser.card_number_visible ? "Hide on User Dashboard" : "Show on User Dashboard"}
+                    >
+                      {currentUser.card_number_visible ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+                    </button>
+                  </div>
+
+                  {isEditingCard ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        value={newCardNumber}
+                        onChange={(e) => setNewCardNumber(e.target.value)}
+                        className="flex-1 bg-white border border-emerald-200 rounded px-2 py-1 text-sm font-mono focus:ring-1 focus:ring-emerald-500 outline-none"
+                        placeholder="Enter card number..."
+                        autoFocus
+                      />
+                      <button
+                        onClick={handleUpdateCardNumber}
+                        disabled={isSavingCard}
+                        className="p-1 bg-emerald-500 text-white rounded hover:bg-emerald-600 disabled:opacity-50"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setIsEditingCard(false);
+                          setNewCardNumber(currentUser.card_number || '');
+                        }}
+                        className="p-1 bg-slate-200 text-slate-600 rounded hover:bg-slate-300"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <p className="text-lg md:text-xl font-mono text-slate-700 tracking-tight">
+                      {formatCardNumber(currentUser.card_number || null)}
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -151,8 +231,8 @@ export function UserManagement({ user, onBack }: any) {
                 <span className="text-emerald-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     transactions
-                      .filter((t) => Number(t.amount) > 0)
-                      .reduce((sum, t) => sum + Number(t.amount), 0)
+                      .filter((t: Transaction) => Number(t.amount) > 0)
+                      .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
                   )}
                 </span>
               </div>
@@ -161,8 +241,8 @@ export function UserManagement({ user, onBack }: any) {
                 <span className="text-rose-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     Math.abs(transactions
-                      .filter((t) => Number(t.amount) < 0)
-                      .reduce((sum, t) => sum + Number(t.amount), 0))
+                      .filter((t: Transaction) => Number(t.amount) < 0)
+                      .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0))
                   )}
                 </span>
               </div>
@@ -192,7 +272,7 @@ export function UserManagement({ user, onBack }: any) {
                 <p className="text-sm text-slate-500">This user has no history yet.</p>
               </div>
             ) : (
-              transactions.map((transaction) => {
+              transactions.map((transaction: Transaction) => {
                 const isCredit = Number(transaction.amount) >= 0;
                 return (
                   <div key={transaction.id} className="p-4 md:p-6 hover:bg-white/80 transition flex items-center justify-between group gap-4">

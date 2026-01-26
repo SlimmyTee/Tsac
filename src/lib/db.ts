@@ -1,5 +1,5 @@
 import { supabase } from './supabase';
-import { Transaction, TransactionRequest } from '../types';
+import { Transaction, TransactionRequest, Profile } from '../types';
 
 // Transactions
 export const fetchUserTransactions = async (userId: string) => {
@@ -24,24 +24,7 @@ export const fetchAllTransactions = async () => {
 };
 
 // Requests
-export const createRequest = async (request: Omit<TransactionRequest, 'id' | 'status' | 'created_at' | 'user'>) => {
-    const { data, error } = await supabase
-        .from('requests')
-        .insert([
-            {
-                user_id: request.user_id,
-                type: request.type,
-                amount: request.amount,
-                details: request.details,
-                status: 'pending',
-            },
-        ])
-        .select()
-        .single();
-
-    if (error) throw error;
-    return data;
-};
+// Requests
 
 export const fetchPendingRequests = async () => {
     // Note: This relies on Supabase being able to fetch user metadata or a profiles table join.
@@ -112,28 +95,21 @@ export const fetchProfiles = async () => {
         .order('created_at', { ascending: false });
 
     if (error) throw error;
-    // Map database snake_case to app camelCase or expected structure if needed,
-    // but the app seems to expect snake_case from Supabase generally, OR currently uses mock camelCase.
-    // AdminDashboard expects: full_name, email, id, card_number, created_at.
-    // The 'profiles' table has these columns (snake_case).
     return data;
 };
 
-// Payments (Mock Processing)
-export const processPayment = async (userId: string, amount: number, description: string) => {
-    // 1. Create a completed 'credit' transaction directly
-    const { error } = await supabase
-        .from('transactions')
-        .insert([{
-            user_id: userId,
-            amount: Math.abs(amount), // Ensure positive for credit
-            type: 'credit',
-            description: description,
-            status: 'completed'
-        }]);
+export const updateProfile = async (userId: string, updates: Partial<Profile>) => {
+    const { data, error } = await supabase
+        .from('profiles')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single();
 
     if (error) throw error;
+    return data;
 };
+
 
 export const createAdminTransaction = async (userId: string, amount: number, type: 'credit' | 'debit', description: string) => {
     const { error } = await supabase
