@@ -307,7 +307,7 @@ export function AdminDashboard() {
                   <thead className="bg-slate-50/50 border-b border-slate-200">
                     <tr>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase">User Profile</th>
-                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase">TCC Number</th>
+                      <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Card Number</th>
                       <th className="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase">Joined Date</th>
                       <th className="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase">Action</th>
                     </tr>
