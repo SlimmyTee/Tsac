@@ -304,15 +304,17 @@ export function UserManagement({ user, onBack }: any) {
                         </p>
                       </div>
 
-                      {transaction.status !== 'pending' && (
-                        <button
-                          onClick={() => handleUpdateStatus(transaction.id, 'pending')}
-                          className="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition shadow-sm"
-                          title="Set to Pending"
-                        >
-                          <Clock className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleUpdateStatus(transaction.id, transaction.status === 'pending' ? 'completed' : 'pending')}
+                        className={`p-1.5 rounded-lg transition shadow-sm ${
+                          transaction.status === 'pending'
+                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'
+                            : 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white'
+                        }`}
+                        title={transaction.status === 'pending' ? 'Mark as Completed' : 'Mark as Pending'}
+                      >
+                        <Clock className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 )
