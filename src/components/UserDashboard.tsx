@@ -39,16 +39,21 @@ export function UserDashboard() {
   };
 
   const calculateBalances = (txns: Transaction[]) => {
-    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
+    // Only completed transactions count toward escrow balance
+    const total = txns
+      .filter(t => t.status === 'completed')
+      .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
 
+    // Refundable = only completed credits
     const refundable = txns
-      .filter(t => t.type === 'credit')
+      .filter(t => t.type === 'credit' && t.status === 'completed')
       .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setRefundableBalance(refundable);
 
+    // Pending charges = pending debits only (doesn't affect escrow balance)
     const pending = txns
-      .filter(t => t.type === 'debit')
+      .filter(t => t.type === 'debit' && t.status === 'pending')
       .reduce((sum, txn) => sum + Math.abs(Number(txn.amount)), 0);
     setPendingCharge(pending);
   };

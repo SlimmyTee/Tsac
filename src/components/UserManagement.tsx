@@ -37,7 +37,10 @@ export function UserManagement({ user, onBack }: any) {
   };
 
   const calculateBalance = (txns: Transaction[]) => {
-    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
+    // Only completed transactions count toward balance
+    const total = txns
+      .filter(t => t.status === 'completed')
+      .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
   };
 
