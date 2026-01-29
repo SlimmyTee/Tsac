@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus, updateProfile } from '../lib/db';
+import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus, updateProfile, deleteTransaction } from '../lib/db';
 import { Transaction, Profile } from '../types';
-import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock, Edit2, Check, X, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock, Edit2, Check, X, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 export function UserManagement({ user, onBack }: any) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -87,6 +87,17 @@ export function UserManagement({ user, onBack }: any) {
       alert('Error updating card number');
     } finally {
       setIsSavingCard(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) return;
+    try {
+      await deleteTransaction(transactionId);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      alert('Error deleting transaction');
     }
   };
 
@@ -317,6 +328,15 @@ export function UserManagement({ user, onBack }: any) {
                         title={transaction.status === 'pending' ? 'Mark as Completed' : 'Mark as Pending'}
                       >
                         <Clock className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteTransaction(transaction.id)}
+                        className="p-1.5 rounded-lg transition shadow-sm bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={transaction.status === 'pending' ? 'Delete Transaction' : 'Only pending transactions can be deleted'}
+                        disabled={transaction.status !== 'pending'}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
