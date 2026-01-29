@@ -39,21 +39,16 @@ export function UserDashboard() {
   };
 
   const calculateBalances = (txns: Transaction[]) => {
-    // Only include completed transactions in the main balance
-    const completedTotal = txns
-      .filter(t => t.status === 'completed')
-      .reduce((sum, txn) => sum + Number(txn.amount), 0);
-    setBalance(completedTotal);
+    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
+    setBalance(total);
 
-    // Refundable = only completed credits
     const refundable = txns
-      .filter(t => t.type === 'credit' && t.status === 'completed')
+      .filter(t => t.type === 'credit')
       .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setRefundableBalance(refundable);
 
-    // Pending charges = pending debits only
     const pending = txns
-      .filter(t => t.type === 'debit' && t.status === 'pending')
+      .filter(t => t.type === 'debit')
       .reduce((sum, txn) => sum + Math.abs(Number(txn.amount)), 0);
     setPendingCharge(pending);
   };
@@ -233,7 +228,7 @@ export function UserDashboard() {
                     <tr key={transaction.id} className="hover:bg-white/80 transition-colors group">
                       <td className="px-8 py-5 text-slate-700 font-medium">{transaction.description}</td>
                       <td className="px-8 py-5">
-                        <span className={`font-semibold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
+                        <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-semibold`}>
                           {formatCurrency(Math.abs(transaction.amount))}
                         </span>
                       </td>
@@ -275,7 +270,7 @@ export function UserDashboard() {
                 <div key={transaction.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <p className="font-medium text-slate-800 text-sm">{transaction.description}</p>
-                    <span className={`text-sm font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
+                    <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {formatCurrency(Math.abs(transaction.amount))}
                     </span>
                   </div>
@@ -283,11 +278,7 @@ export function UserDashboard() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-0.5 rounded">
                       {transaction.type}
                     </span>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize
-                       ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                        transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-600'}
-                    `>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                       {transaction.status}
                     </span>
                   </div>

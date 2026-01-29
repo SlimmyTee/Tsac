@@ -37,10 +37,7 @@ export function UserManagement({ user, onBack }: any) {
   };
 
   const calculateBalance = (txns: Transaction[]) => {
-    // Only completed transactions count toward balance
-    const total = txns
-      .filter(t => t.status === 'completed')
-      .reduce((sum, txn) => sum + Number(txn.amount), 0);
+    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
   };
 
@@ -234,17 +231,17 @@ export function UserManagement({ user, onBack }: any) {
                 <span className="text-emerald-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     transactions
-                      .filter((t: Transaction) => t.type === 'credit' && t.status === 'completed')
+                      .filter((t: Transaction) => Number(t.amount) > 0)
                       .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0)
                   )}
                 </span>
               </div>
               <div className="flex justify-between items-center pb-2">
-                <span className="text-slate-400 text-sm md:text-base">Pending Debits</span>
+                <span className="text-slate-400 text-sm md:text-base">Total Debits</span>
                 <span className="text-rose-400 font-bold text-lg md:text-xl">
                   {formatCurrency(
                     Math.abs(transactions
-                      .filter((t: Transaction) => t.type === 'debit' && t.status === 'pending')
+                      .filter((t: Transaction) => Number(t.amount) < 0)
                       .reduce((sum: number, t: Transaction) => sum + Number(t.amount), 0))
                   )}
                 </span>
@@ -299,7 +296,7 @@ export function UserManagement({ user, onBack }: any) {
 
                     <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
                       <div className="text-right">
-                        <p className={`text-base md:text-lg font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
+                        <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
                           {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
                         </p>
                         <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
