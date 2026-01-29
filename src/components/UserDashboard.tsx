@@ -228,7 +228,7 @@ export function UserDashboard() {
                     <tr key={transaction.id} className="hover:bg-white/80 transition-colors group">
                       <td className="px-8 py-5 text-slate-700 font-medium">{transaction.description}</td>
                       <td className="px-8 py-5">
-                        <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-semibold`}>
+                        <span className={`font-semibold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                           {formatCurrency(Math.abs(transaction.amount))}
                         </span>
                       </td>
@@ -270,7 +270,7 @@ export function UserDashboard() {
                 <div key={transaction.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <p className="font-medium text-slate-800 text-sm">{transaction.description}</p>
-                    <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`text-sm font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                       {formatCurrency(Math.abs(transaction.amount))}
                     </span>
                   </div>

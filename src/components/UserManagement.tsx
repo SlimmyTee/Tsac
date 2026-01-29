@@ -296,7 +296,7 @@ export function UserManagement({ user, onBack }: any) {
 
                     <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
                       <div className="text-right">
-                        <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        <p className={`text-base md:text-lg font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                           {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
                         </p>
                         <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
