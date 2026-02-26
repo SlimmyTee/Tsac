@@ -10,7 +10,7 @@ export function SupportModal({ isOpen, onClose, type }: SupportModalProps) {
     if (!isOpen) return null;
 
     const contactEmail = 'therapeuticserviceaccesscard@gmail.com';
-    const contactPhone = '+1 (213) 795-4051';
+    const contactPhone = '+1 (303) 435-1703';
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
