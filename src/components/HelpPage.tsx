@@ -59,7 +59,7 @@ export function HelpPage() {
                 </div>
                 <h3 className="font-semibold text-slate-800 text-sm md:text-base mb-1">Phone</h3>
                 <p className="text-xs md:text-sm text-slate-500 mb-2 md:mb-3">Mon-Fri, 9am - 5pm.</p>
-                <span className="text-purple-600 text-xs md:text-sm font-medium flex items-center"><a href='tel:+12137954051'>+1 (213) 795-4051</a> <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 ml-1" /></span>
+                <span className="text-purple-600 text-xs md:text-sm font-medium flex items-center"><a href='tel:+13034351703'>+1 (303) 435-1703</a> <ChevronRight className="w-3.5 h-3.5 md:w-4 md:h-4 ml-1" /></span>
               </div>
             </div>
           </div>
