@@ -133,3 +133,12 @@ export const updateTransactionStatus = async (transactionId: string, status: 'co
 
     if (error) throw error;
 };
+
+export const deleteTransaction = async (transactionId: string) => {
+    const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+
+    if (error) throw error;
+};

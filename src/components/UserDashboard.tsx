@@ -39,16 +39,21 @@ export function UserDashboard() {
   };
 
   const calculateBalances = (txns: Transaction[]) => {
-    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
+    // Only completed transactions count toward escrow balance
+    const total = txns
+      .filter(t => t.status === 'completed')
+      .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
 
+    // Refundable = only completed credits
     const refundable = txns
-      .filter(t => t.type === 'credit')
+      .filter(t => t.type === 'credit' && t.status === 'completed')
       .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setRefundableBalance(refundable);
 
+    // Pending charges = pending debits only (doesn't affect escrow balance)
     const pending = txns
-      .filter(t => t.type === 'debit')
+      .filter(t => t.type === 'debit' && t.status === 'pending')
       .reduce((sum, txn) => sum + Math.abs(Number(txn.amount)), 0);
     setPendingCharge(pending);
   };
@@ -155,7 +160,7 @@ export function UserDashboard() {
 
               <div className="group p-4 bg-white/50 rounded-2xl hover:bg-white/80 transition-colors border border-transparent hover:border-rose-100">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm text-slate-500 font-medium group-hover:text-rose-600 transition-colors">Debited</p>
+                  <p className="text-sm text-slate-500 font-medium group-hover:text-rose-600 transition-colors">Pending</p>
                   <TrendingDown className="w-4 h-4 text-rose-500" />
                 </div>
                 <p className="text-xl md:text-2xl font-bold text-rose-600 group-hover:text-rose-700 transition-colors">{formatCurrency(pendingCharge)}</p>
@@ -228,7 +233,7 @@ export function UserDashboard() {
                     <tr key={transaction.id} className="hover:bg-white/80 transition-colors group">
                       <td className="px-8 py-5 text-slate-700 font-medium">{transaction.description}</td>
                       <td className="px-8 py-5">
-                        <span className={`${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'} font-semibold`}>
+                        <span className={`font-semibold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                           {formatCurrency(Math.abs(transaction.amount))}
                         </span>
                       </td>
@@ -270,7 +275,7 @@ export function UserDashboard() {
                 <div key={transaction.id} className="p-4 space-y-3">
                   <div className="flex justify-between items-start">
                     <p className="font-medium text-slate-800 text-sm">{transaction.description}</p>
-                    <span className={`text-sm font-bold ${transaction.amount >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <span className={`text-sm font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                       {formatCurrency(Math.abs(transaction.amount))}
                     </span>
                   </div>
@@ -278,11 +283,7 @@ export function UserDashboard() {
                     <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-50 px-2 py-0.5 rounded">
                       {transaction.type}
                     </span>
-                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize
-                       ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
-                        transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-slate-100 text-slate-600'}
-                    `}>
+                    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium capitalize ${transaction.status === 'completed' ? 'bg-emerald-100 text-emerald-700' : transaction.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>
                       {transaction.status}
                     </span>
                   </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus, updateProfile } from '../lib/db';
+import { fetchUserTransactions, createAdminTransaction, updateTransactionStatus, updateProfile, deleteTransaction } from '../lib/db';
 import { Transaction, Profile } from '../types';
-import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock, Edit2, Check, X, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Plus, CreditCard, Wallet, Calendar, Clock, Edit2, Check, X, Eye, EyeOff, Trash2 } from 'lucide-react';
 
 export function UserManagement({ user, onBack }: any) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -38,7 +38,10 @@ export function UserManagement({ user, onBack }: any) {
   };
 
   const calculateBalance = (txns: Transaction[]) => {
-    const total = txns.reduce((sum, txn) => sum + Number(txn.amount), 0);
+    // Only completed transactions count toward balance
+    const total = txns
+      .filter(t => t.status === 'completed')
+      .reduce((sum, txn) => sum + Number(txn.amount), 0);
     setBalance(total);
   };
 
@@ -89,6 +92,17 @@ export function UserManagement({ user, onBack }: any) {
       alert('Error updating card number');
     } finally {
       setIsSavingCard(false);
+    }
+  };
+
+  const handleDeleteTransaction = async (transactionId: string) => {
+    if (!confirm('Are you sure you want to delete this transaction? This action cannot be undone.')) return;
+    try {
+      await deleteTransaction(transactionId);
+      fetchTransactions();
+    } catch (error) {
+      console.error('Error deleting transaction:', error);
+      alert('Error deleting transaction');
     }
   };
 
@@ -316,7 +330,7 @@ export function UserManagement({ user, onBack }: any) {
 
                     <div className="flex items-center gap-3 md:gap-4 flex-shrink-0">
                       <div className="text-right">
-                        <p className={`text-base md:text-lg font-bold ${isCredit ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        <p className={`text-base md:text-lg font-bold ${transaction.status === 'pending' ? 'text-red-600' : transaction.status === 'completed' ? 'text-emerald-600' : 'text-slate-600'}`}>
                           {isCredit ? '+' : ''}{formatCurrency(Number(transaction.amount))}
                         </p>
                         <p className="text-[10px] md:text-xs text-slate-400 font-medium uppercase tracking-wide">
@@ -324,15 +338,26 @@ export function UserManagement({ user, onBack }: any) {
                         </p>
                       </div>
 
-                      {transaction.status !== 'pending' && (
-                        <button
-                          onClick={() => handleUpdateStatus(transaction.id, 'pending')}
-                          className="p-1.5 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-600 hover:text-white transition shadow-sm"
-                          title="Set to Pending"
-                        >
-                          <Clock className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        onClick={() => handleUpdateStatus(transaction.id, transaction.status === 'pending' ? 'completed' : 'pending')}
+                        className={`p-1.5 rounded-lg transition shadow-sm ${
+                          transaction.status === 'pending'
+                            ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white'
+                            : 'bg-amber-50 text-amber-600 hover:bg-amber-600 hover:text-white'
+                        }`}
+                        title={transaction.status === 'pending' ? 'Mark as Completed' : 'Mark as Pending'}
+                      >
+                        <Clock className="w-4 h-4" />
+                      </button>
+
+                      <button
+                        onClick={() => handleDeleteTransaction(transaction.id)}
+                        className="p-1.5 rounded-lg transition shadow-sm bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={transaction.status === 'pending' ? 'Delete Transaction' : 'Only pending transactions can be deleted'}
+                        disabled={transaction.status !== 'pending'}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
                 )
