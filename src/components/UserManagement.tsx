@@ -19,6 +19,7 @@ export function UserManagement({ user, onBack }: any) {
   const [isEditingCard, setIsEditingCard] = useState(false);
   const [newCardNumber, setNewCardNumber] = useState(user.card_number || '');
   const [isSavingCard, setIsSavingCard] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     fetchTransactions();
@@ -55,6 +56,8 @@ export function UserManagement({ user, onBack }: any) {
 
       setShowAddModal(false);
       setFormData({ amount: '', type: 'credit', description: '' });
+      setSuccess('Transaction added successfully!');
+      setTimeout(() => setSuccess(null), 3000);
       fetchTransactions();
     } catch (error) {
       console.error('Error adding transaction:', error);
@@ -79,6 +82,8 @@ export function UserManagement({ user, onBack }: any) {
       const updatedUser = await updateProfile(user.id, { card_number: newCardNumber });
       setCurrentUser(updatedUser);
       setIsEditingCard(false);
+      setSuccess('Card number updated successfully!');
+      setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
       console.error('Error updating card number:', error);
       alert('Error updating card number');
@@ -127,6 +132,21 @@ export function UserManagement({ user, onBack }: any) {
       </div>
 
       <div className="max-w-7xl mx-auto relative z-10 w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
+        {/* Success Message Toast */}
+        {success && (
+          <div className="fixed top-24 right-6 left-6 md:left-auto md:w-96 z-50 animate-in slide-in-from-top-4 duration-300">
+            <div className="bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-xl flex items-center justify-between border border-emerald-500/50">
+              <div className="flex items-center gap-3">
+                <Check className="w-5 h-5" />
+                <span className="font-semibold">{success}</span>
+              </div>
+              <button onClick={() => setSuccess(null)} className="p-1 hover:bg-emerald-700 rounded-md transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={onBack}
           className="flex items-center space-x-2 text-slate-500 hover:text-emerald-700 transition mb-6 group"
