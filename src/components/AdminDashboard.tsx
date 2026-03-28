@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { fetchPendingRequests, processRequest, fetchProfiles } from '../lib/db';
+import { fetchPendingRequests, processRequest, fetchProfiles, deleteUser } from '../lib/db';
 import { TransactionRequest, Profile } from '../types';
-import { Users, LogOut, Search, Wallet, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Users, LogOut, Search, Wallet, CheckCircle, XCircle, Clock, Trash2 } from 'lucide-react';
 import { UserManagement } from './UserManagement';
 
 export function AdminDashboard() {
@@ -42,6 +42,19 @@ export function AdminDashboard() {
     } catch (err) {
       alert('Error processing request');
       console.error(err);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, email: string) => {
+    if (!confirm(`Are you sure you want to delete the user "${email}"? This will permanently remove their profile and all transaction history. This action cannot be undone.`)) return;
+    if (!confirm(`FINAL CONFIRMATION: Are you REALLY sure you want to delete ${email}?`)) return;
+    
+    try {
+      await deleteUser(userId);
+      fetchData();
+    } catch (err: any) {
+      console.error('Error deleting user:', err);
+      alert(`Error deleting user: ${err.message || 'Unknown error'}`);
     }
   };
 
@@ -333,12 +346,21 @@ export function AdminDashboard() {
                           {formatDate(user.created_at)}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <button
-                            onClick={() => setSelectedUser(user)}
-                            className="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-emerald-600 transition shadow-sm"
-                          >
-                            Manage
-                          </button>
+                          <div className="flex items-center justify-end gap-2">
+                            <button
+                              onClick={() => setSelectedUser(user)}
+                              className="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded-lg hover:bg-emerald-600 transition shadow-sm"
+                            >
+                              Manage
+                            </button>
+                            <button
+                              onClick={() => handleDeleteUser(user.id, user.email || '')}
+                              className="p-2 bg-rose-50 text-rose-600 rounded-lg hover:bg-rose-600 hover:text-white transition shadow-sm"
+                              title="Delete User"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -360,12 +382,20 @@ export function AdminDashboard() {
                         <p className="text-[10px] font-mono text-emerald-600 mt-0.5">{user.card_number || 'No Card'}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setSelectedUser(user)}
-                      className="px-3 py-1.5 bg-slate-800 text-white text-[10px] font-bold rounded-lg whitespace-nowrap"
-                    >
-                      Manage
-                    </button>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        onClick={() => setSelectedUser(user)}
+                        className="px-3 py-1.5 bg-slate-800 text-white text-[10px] font-bold rounded-lg whitespace-nowrap"
+                      >
+                        Manage
+                      </button>
+                      <button
+                        onClick={() => handleDeleteUser(user.id, user.email || '')}
+                        className="p-1.5 bg-rose-50 text-rose-600 rounded-lg flex items-center justify-center"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>

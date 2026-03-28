@@ -15,6 +15,7 @@ export interface Profile {
     duration?: number;
     service_type?: string;
     personal_items?: string;
+    address?: string;
     card_number?: string;
     card_number_visible?: boolean;
     created_at?: string;

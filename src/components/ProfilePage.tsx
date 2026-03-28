@@ -27,7 +27,7 @@ export function ProfilePage() {
         phone: profile.phone || '',
         date_of_birth: profile.date_of_birth || '',
         gender: profile.gender || '',
-        address: '',
+        address: profile.address || '',
       });
     }
   }, [profile]);
@@ -51,9 +51,9 @@ export function ProfilePage() {
           first_name: formData.first_name,
           last_name: formData.last_name,
           phone: formData.phone,
-          // Do not update email typically as it's auth related, but we can update the profile copy if needed
-          // gender, dob etc if supported in DB. The current profile table might primarily just have first/last/phone/full_name.
-          // We'll update what we can.
+          date_of_birth: formData.date_of_birth,
+          gender: formData.gender,
+          address: formData.address,
         })
         .eq('id', profile.id);
 

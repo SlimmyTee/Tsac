@@ -142,3 +142,11 @@ export const deleteTransaction = async (transactionId: string) => {
 
     if (error) throw error;
 };
+
+export const deleteUser = async (userId: string) => {
+    const { error } = await supabase.rpc('delete_user_by_admin', {
+        target_user_id: userId
+    });
+
+    if (error) throw error;
+};
